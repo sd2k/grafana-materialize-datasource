@@ -1,7 +1,11 @@
-use futures_util::stream::FuturesOrdered;
+use futures_util::{
+    stream::{FuturesOrdered, FuturesUnordered},
+    StreamExt,
+};
 use serde::Deserialize;
 
 use grafana_plugin_sdk::{backend, data};
+use tokio_postgres::Client;
 
 use crate::{Error, MaterializePlugin, Path, TailTarget};
 
@@ -25,51 +29,57 @@ struct MaterializeQueryDataRequest {
     target: TailTarget,
 }
 
-impl MaterializePlugin {
-    async fn query_data_single(
-        &self,
-        plugin_context: &backend::PluginContext,
-        query: backend::DataQuery,
-    ) -> Result<backend::DataResponse, Error> {
-        let datasource_settings = plugin_context
-            .datasource_instance_settings
-            .as_ref()
-            .ok_or(Error::MissingDatasource)?;
-        let target = serde_json::from_value(query.json)
-            .map(|req: MaterializeQueryDataRequest| req.target)
-            .map_err(|e| Error::InvalidTailTarget(e.to_string()))?;
-        let client = self.get_client(datasource_settings).await?;
-        let rows = target.select_all(&client).await?;
-        // TODO: use `rows` to create `frame`.
-        let mut frame = data::Frame::new("");
+async fn query_data_single(
+    client: Client,
+    uid: String,
+    query: backend::DataQuery,
+) -> Result<backend::DataResponse, Error> {
+    let target = serde_json::from_value(query.json)
+        .map(|req: MaterializeQueryDataRequest| req.target)
+        .map_err(|e| Error::InvalidTailTarget(e.to_string()))?;
+    let rows = target.select_all(&client).await?;
+    // TODO: use `rows` to create `frame`.
+    let mut frame = data::Frame::new("");
 
-        frame.set_channel(
-            format!("ds/{}/{}", datasource_settings.uid, Path::Tail(target))
-                .parse()
-                .expect("constructing channel"),
-        );
-        let frame = frame.check()?;
+    frame.set_channel(
+        format!("ds/{}/{}", uid, Path::Tail(target))
+            .parse()
+            .expect("constructing channel"),
+    );
+    let frame = frame.check()?;
 
-        Ok(backend::DataResponse::new(query.ref_id, vec![frame]))
-    }
+    Ok(backend::DataResponse::new(query.ref_id, vec![frame]))
 }
 
 #[backend::async_trait]
 impl backend::DataService for MaterializePlugin {
     type QueryError = QueryError;
-    type Stream<'a> = backend::BoxDataResponseStream<'a, Self::QueryError>;
+    type Stream = backend::BoxDataResponseStream<Self::QueryError>;
 
-    async fn query_data(&self, request: backend::QueryDataRequest) -> Self::Stream<'_> {
-        let plugin_context = request.plugin_context;
+    async fn query_data(&self, request: backend::QueryDataRequest) -> Self::Stream {
+        let datasource_settings = request
+            .plugin_context
+            .datasource_instance_settings
+            .clone()
+            .ok_or(Error::MissingDatasource)
+            .unwrap();
+        let clients: Vec<_> = request
+            .queries
+            .iter()
+            .map(|_| self.get_client(&datasource_settings))
+            .collect::<FuturesUnordered<_>>()
+            .collect()
+            .await;
         Box::pin(
             request
                 .queries
                 .into_iter()
-                .map(|x| {
+                .zip(clients)
+                .map(move |(x, client)| {
                     let ref_id = x.ref_id.clone();
-                    let plugin_context = plugin_context.clone();
-                    async move {
-                        self.query_data_single(&plugin_context, x)
+                    let uid = datasource_settings.uid.clone();
+                    async {
+                        query_data_single(client.unwrap(), uid, x)
                             .await
                             .map_err(|source| QueryError { ref_id, source })
                     }

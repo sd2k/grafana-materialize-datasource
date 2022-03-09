@@ -1,4 +1,4 @@
-FROM rustlang/rust:nightly-alpine
+FROM rust:1.59-alpine
 
 WORKDIR /usr/src/backend
 

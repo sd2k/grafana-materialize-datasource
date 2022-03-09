@@ -398,7 +398,7 @@ dependencies = [
 [[package]]
 name = "grafana-plugin-sdk"
 version = "0.1.0"
-source = "git+https://github.com/grafana/grafana-plugin-sdk-rust?branch=query-data-gat#dd70e1c322a9a74380f9580284b3832c6c9dd914"
+source = "git+https://github.com/grafana/grafana-plugin-sdk-rust?branch=return-stream-from-query-data#dd204a4e37cd414174b3fa5bb95003cfe3105f7c"
 dependencies = [
  "arrow2",
  "chrono",
@@ -430,7 +430,7 @@ dependencies = [
 [[package]]
 name = "grafana-plugin-sdk-macros"
 version = "0.1.0"
-source = "git+https://github.com/grafana/grafana-plugin-sdk-rust?branch=query-data-gat#dd70e1c322a9a74380f9580284b3832c6c9dd914"
+source = "git+https://github.com/grafana/grafana-plugin-sdk-rust?branch=return-stream-from-query-data#dd204a4e37cd414174b3fa5bb95003cfe3105f7c"
 dependencies = [
  "proc-macro2",
  "quote",

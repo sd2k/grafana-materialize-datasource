@@ -47,7 +47,7 @@ At the repository root:
 
 #### Plugin backend
 
-Make sure you have a recent version of Rust nightly (required for now due to needing generic associated types- run `rustup update nightly`), and install [`cargo-watch`].
+Make sure you have a recent version of Rust (run `rustup update stable`), and install [`cargo-watch`].
 
 Then run:
 

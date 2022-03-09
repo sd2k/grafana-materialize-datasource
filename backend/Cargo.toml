@@ -13,7 +13,7 @@ chrono = "0.4.19"
 futures-core = "0.3.21"
 futures-util = "0.3.21"
 # grafana-plugin-sdk = "0.1.0"
-grafana-plugin-sdk = { git = "https://github.com/grafana/grafana-plugin-sdk-rust", branch = "query-data-gat" }
+grafana-plugin-sdk = { git = "https://github.com/grafana/grafana-plugin-sdk-rust", branch = "return-stream-from-query-data" }
 http = "0.2.6"
 rand = "0.8.5"
 serde = { version = "1.0.136", features = ["derive"] }

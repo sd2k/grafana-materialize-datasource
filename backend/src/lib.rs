@@ -1,5 +1,3 @@
-#![feature(generic_associated_types)]
-
 mod data;
 mod diagnostics;
 mod error;
