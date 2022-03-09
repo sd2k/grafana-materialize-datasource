@@ -1,0 +1,38 @@
+{
+  "$schema": "https://raw.githubusercontent.com/grafana/grafana/master/docs/sources/developers/plugins/plugin.schema.json",
+  "type": "datasource",
+  "name": "Materialize",
+  "id": "grafana-materialize-datasource",
+  "metrics": true,
+  "backend": true,
+  "streaming": true,
+  "executable": "./gpx_grafana-materialize-datasource",
+  "info": {
+    "description": "Materialize datasource for Grafana",
+    "author": {
+      "name": "Ben Sully",
+      "url": ""
+    },
+    "keywords": [
+      "materialize"
+    ],
+    "logos": {
+      "small": "./img/logo.svg",
+      "large": "./img/logo.svg"
+    },
+    "links": [
+      {
+        "name": "GitHub",
+        "url": "https://github.com/sd2k/grafana-materialize-datasource"
+      },
+      {
+        "name": "License",
+        "url": "https://github.com/sd2k/grafana-materialize-datasource/blob/main/LICENSE"
+      }
+    ],
+    "screenshots": [],
+    "version": "%VERSION%",
+    "updated": "%TODAY%"
+  },
+  "includes": []
+}

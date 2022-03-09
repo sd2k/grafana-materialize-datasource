@@ -1,0 +1,28 @@
+{
+  "name": "grafana-materialize-datasource",
+  "version": "0.1.0",
+  "description": "Materialize datasource for Grafana",
+  "scripts": {
+    "build": "grafana-toolkit plugin:build",
+    "test": "grafana-toolkit plugin:test",
+    "dev": "grafana-toolkit plugin:dev",
+    "watch": "grafana-toolkit plugin:dev --watch",
+    "sign": "grafana-toolkit plugin:sign",
+    "start": "yarn watch"
+  },
+  "author": "Ben Sully",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@grafana/data": "^8.4.1",
+    "@grafana/runtime": "^8.4.1",
+    "@grafana/toolkit": "^8.4.1",
+    "@grafana/ui": "^8.4.1",
+    "@types/lodash": "^4.14.177"
+  },
+  "resolutions": {
+    "rxjs": "7.3.0"
+  },
+  "engines": {
+    "node": ">=14"
+  }
+}

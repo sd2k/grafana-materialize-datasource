@@ -1,0 +1,18 @@
+apiVersion: 1
+
+deleteDatasources:
+  - name: Materialize - Docker
+    orgId: 1
+
+datasources:
+  - name: Materialize - Docker
+    type: grafana-materialize-datasource
+    uid: materializedocker
+    access: proxy
+    jsonData:
+      host: materialized
+      port: 6875
+    user: materialize
+    secureJsonData:
+      password: materialize
+    isDefault: true
