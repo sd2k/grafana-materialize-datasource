@@ -61,11 +61,11 @@ impl backend::ResourceService for MaterializePlugin {
         let rows = client
             .query(
                 r#"
-            SELECT DISTINCT name
+            SELECT DISTINCT mzr.name AS name
             FROM mz_catalog.mz_relations mzr
             JOIN mz_catalog.mz_schemas mzs ON mzr.schema_id = mzs.id
             WHERE database_id IS NOT NULL
-            ORDER BY name
+            ORDER BY mzr.name
         "#,
                 &[],
             )

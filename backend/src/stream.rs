@@ -13,6 +13,8 @@ fn rows_to_frame(rows: Vec<Row>) -> Result<data::Frame> {
         return Ok(frame);
     }
 
+    return Ok(frame);
+
     // TODO: this inner type (i32) is not actually known at compile time so we'll
     // need to do some boxing.
     let mut columns: Vec<Vec<i32>> = rows[0]
@@ -33,7 +35,7 @@ fn rows_to_frame(rows: Vec<Row>) -> Result<data::Frame> {
     for (new_column, name) in columns.into_iter().zip(names) {
         frame.add_field(new_column.into_field(&name))
     }
-    todo!()
+    Ok(frame)
 }
 
 /// Convert a Grafana Plugin SDK Frame to some initial data to send to new subscribers.

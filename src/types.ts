@@ -2,47 +2,41 @@ import { DataQuery, DataSourceJsonData } from '@grafana/data';
 
 // Regular datasource queries.
 
-export enum ConsolePathName {
-  Tasks = 'tasks',
-  TaskDetails = 'task',
-  TaskHistogram = 'taskHistogram',
-  Resources = 'resources',
+export enum MaterializeOperation {
+  Tail = 'tail',
 }
 
-interface PartialConsoleQuery extends DataQuery {
-  path?: ConsolePathName;
+export enum MaterializeTarget {
+  Relation = 'relation',
+  SelectStatement = 'select',
 }
 
-export interface TasksConsolePath extends PartialConsoleQuery {
-  path?: ConsolePathName.Tasks;
+interface PartialQuery extends DataQuery {
+  operation: MaterializeOperation;
 }
 
-export interface ResourcesConsolePath extends PartialConsoleQuery {
-  path?: ConsolePathName.Resources;
+export interface TailRelation extends PartialQuery {
+  operation: MaterializeOperation.Tail;
+  target: MaterializeTarget.Relation;
+  name?: string;
 }
 
-export interface TaskDetailsConsolePath extends PartialConsoleQuery {
-  path?: ConsolePathName.TaskDetails;
-  taskId?: number;
-  rawTaskId?: string;
+export interface TailStatement extends PartialQuery {
+  operation: MaterializeOperation.Tail;
+  target: MaterializeTarget.SelectStatement;
+  selectStatement?: string;
 }
 
-export interface TaskHistogramConsolePath extends PartialConsoleQuery {
-  path?: ConsolePathName.TaskHistogram;
-  taskId?: number;
-  rawTaskId?: string;
-}
+export type MaterializeQuery = TailRelation | TailStatement;
 
-export type ConsoleQuery = TasksConsolePath | ResourcesConsolePath | TaskDetailsConsolePath | TaskHistogramConsolePath;
-
-export const defaultQuery: Partial<ConsoleQuery> = {
-  path: ConsolePathName.Tasks,
+export const defaultQuery: Partial<MaterializeQuery> = {
+  operation: MaterializeOperation.Tail,
 };
 
 // Variable queries.
 
 export enum VariableQueryPathName {
-  Tasks = 'tasks',
+  Relations = 'relations',
 }
 
 export interface VariableQuery {

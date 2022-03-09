@@ -8,7 +8,9 @@ interface VariableQueryProps {
   onChange: (query: VariableQuery, path?: VariableQueryPathName) => void;
 }
 
-const pathOptions = [{ label: 'Tasks', value: VariableQueryPathName.Tasks, description: 'Query available tasks' }];
+const pathOptions = [
+  { label: 'Relations', value: VariableQueryPathName.Relations, description: 'Query available relations.' },
+];
 
 export const VariableQueryEditor: React.FC<VariableQueryProps> = ({ onChange, query }) => {
   const [state, setState] = useState(query);

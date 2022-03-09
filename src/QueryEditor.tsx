@@ -1,46 +1,56 @@
 import { defaults } from 'lodash';
 
-import React, { ChangeEvent, PureComponent } from 'react';
+import React, { useEffect, useState } from 'react';
 import { QueryEditorProps, SelectableValue } from '@grafana/data';
 import { Input, Select } from '@grafana/ui';
 
 import { DataSource } from './datasource';
-import { defaultQuery, DataSourceOptions, ConsolePathName, ConsoleQuery } from './types';
+import { defaultQuery, DataSourceOptions, MaterializeQuery, MaterializeTarget } from './types';
 
-type Props = QueryEditorProps<DataSource, ConsoleQuery, DataSourceOptions>;
+type Props = QueryEditorProps<DataSource, MaterializeQuery, DataSourceOptions>;
 
-const pathOptions = [
-  { label: 'Tasks', value: ConsolePathName.Tasks, description: 'Tasks list' },
-  { label: 'Task details', value: ConsolePathName.TaskDetails, description: 'Task details' },
-  { label: 'Task histogram', value: ConsolePathName.TaskHistogram, description: 'Task histogram' },
-  { label: 'Resources', value: ConsolePathName.Resources, description: 'Resources list' },
+const targetOptions = [
+  { label: 'Relation', value: MaterializeTarget.Relation, description: 'Tail the output of a source, table or view.' },
+  { label: 'Select statement', value: MaterializeTarget.SelectStatement, description: 'Tail the results of a select statement.' },
 ];
 
-export class QueryEditor extends PureComponent<Props> {
-  onPathChange = (event: SelectableValue<ConsolePathName>) => {
-    const { onChange, query, onRunQuery } = this.props;
-    onChange({ ...query, path: event.value });
-    onRunQuery();
-  };
+export const QueryEditor = ({ datasource, onChange, onRunQuery, query }: Props): JSX.Element => {
+  defaults(query, defaultQuery);
+  const { target } = query;
 
-  onTaskIdChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const { onChange, query, onRunQuery } = this.props;
-    if (query.path === ConsolePathName.TaskDetails || query.path === ConsolePathName.TaskHistogram) {
-      onChange({ ...query, rawTaskId: event.target.value });
-      onRunQuery();
+  const onTargetChange = (event: SelectableValue<MaterializeTarget>) => {
+    onChange({ ...query, target: event.value ?? MaterializeTarget.Relation })
+  };
+  const onRelationChange = (event: SelectableValue<string>) => {
+    if (target === MaterializeTarget.Relation) {
+      onChange({ ...query, name: event.value })
+    }
+  };
+  const onSelectStatementChange = (event: SelectableValue<string>) => {
+    if (target === MaterializeTarget.SelectStatement) {
+      onChange({ ...query, selectStatement: event.target.value });
     }
   };
 
-  render() {
-    const query = defaults(this.props.query, defaultQuery);
-    const { path } = query;
-    return (
-      <div className="gf-form">
-        <Select menuShouldPortal options={pathOptions} value={path} onChange={this.onPathChange} />
-        {query.path === ConsolePathName.TaskDetails || query.path === ConsolePathName.TaskHistogram ? (
-          <Input value={query.rawTaskId} onChange={this.onTaskIdChange} />
-        ) : null}
-      </div>
-    );
-  }
-}
+  const [relations, setRelations] = useState<SelectableValue[]>([]);
+
+  useEffect(() => {
+    if (target === MaterializeTarget.Relation) {
+      datasource.getResource("/").then((options: string[]) => {
+        setRelations(options.map((value) => ({ label: value, value })));
+      })
+    }
+  }, [target])
+
+  return (
+    <div className="gf-form">
+      <Select menuShouldPortal options={targetOptions} value={target} onChange={onTargetChange} />
+      {target === MaterializeTarget.Relation ? (
+        <Select menuShouldPortal options={relations} value={query.name} onChange={onRelationChange} onBlur={onRunQuery} />
+      ) : null}
+      {target === MaterializeTarget.SelectStatement ? (
+        <Input value={query.selectStatement} onChange={onSelectStatementChange} onBlur={onRunQuery} />
+      ) : null}
+    </div>
+  );
+};
