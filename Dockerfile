@@ -41,9 +41,9 @@ ARG TARGETPLATFORM
 # Grafana to this directory as additional plugin path with the GF_PATHS_PLUGINS env var.
 ENV GF_DEFAULT_APP_MODE development
 ENV GF_PATHS_PLUGINS /home/grafana/plugins
-RUN mkdir -p ${GF_PATHS_PLUGINS }
-COPY --chown=grafana --from=yarn-builder /app/grafana-materialize-datasource/dist ${GF_PATHS_PLUGINS }/grafana-materialize-datasource/dist
-COPY --chown=grafana --from=rust-builder /usr/src/backend/target/release/grafana-materialize-datasource ${GF_PATHS_PLUGINS }/grafana-materialize-datasource/dist/gpx_grafana-materialize-datasource
+RUN mkdir -p ${GF_PATHS_PLUGINS}
+COPY --chown=grafana --from=yarn-builder /app/grafana-materialize-datasource/dist ${GF_PATHS_PLUGINS}/grafana-materialize-datasource/dist
+COPY --chown=grafana --from=rust-builder /usr/src/backend/target/release/grafana-materialize-datasource ${GF_PATHS_PLUGINS}/grafana-materialize-datasource/dist/gpx_grafana-materialize-datasource
 RUN GOARCH=$(echo ${TARGETPLATFORM} | sed 's|/|_|') \
-  && mv ${GF_PATHS_PLUGINS }/grafana-materialize-datasource/dist/gpx_grafana-materialize-datasource ${GF_PATHS_PLUGINS }/grafana-materialize-datasource/dist/gpx_grafana-materialize-datasource_${GOARCH}
+  && mv ${GF_PATHS_PLUGINS}/grafana-materialize-datasource/dist/gpx_grafana-materialize-datasource ${GF_PATHS_PLUGINS}/grafana-materialize-datasource/dist/gpx_grafana-materialize-datasource_${GOARCH}
 
