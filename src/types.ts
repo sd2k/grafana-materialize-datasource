@@ -47,5 +47,7 @@ export interface VariableQuery {
  * These are options configured for each DataSource instance.
  */
 export interface DataSourceOptions extends DataSourceJsonData {
-  url?: string;
+  host?: string;
+  port?: number;
+  username?: string;
 }

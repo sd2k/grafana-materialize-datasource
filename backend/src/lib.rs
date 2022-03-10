@@ -7,10 +7,11 @@ mod resource;
 mod stream;
 
 use grafana_plugin_sdk::backend;
+use serde::Deserialize;
 use tokio_postgres::{Client, Config, NoTls};
 
 use convert::rows_to_frame;
-use error::{DatasourceSettingsError, Error, Result};
+use error::{Error, Result};
 use path::{Path, TailTarget};
 
 #[derive(Clone, Debug, Default)]
@@ -21,31 +22,13 @@ impl MaterializePlugin {
         &self,
         datasource_settings: &backend::DataSourceInstanceSettings,
     ) -> std::result::Result<Client, Error> {
+        let settings: MaterializeDatasourceSettings =
+            serde_json::from_value(datasource_settings.json_data.clone())
+                .map_err(Error::InvalidDatasourceSettings)?;
         let (client, connection) = Config::new()
-            .user(&datasource_settings.user)
-            .password(
-                &datasource_settings
-                    .decrypted_secure_json_data
-                    .get("password")
-                    .ok_or(DatasourceSettingsError::MissingPassword)?,
-            )
-            .host(
-                datasource_settings
-                    .json_data
-                    .get("host")
-                    .ok_or(DatasourceSettingsError::MissingHost)?
-                    .as_str()
-                    .ok_or(DatasourceSettingsError::InvalidHost)?,
-            )
-            .port(
-                datasource_settings
-                    .json_data
-                    .get("port")
-                    .ok_or(DatasourceSettingsError::MissingPort)?
-                    .as_u64()
-                    .and_then(|x| x.try_into().ok())
-                    .ok_or(DatasourceSettingsError::InvalidPort)?,
-            )
+            .user(&settings.username)
+            .host(&settings.host)
+            .port(settings.port)
             .connect(NoTls)
             .await?;
         tokio::spawn(async move {
@@ -55,4 +38,11 @@ impl MaterializePlugin {
         });
         Ok(client)
     }
+}
+
+#[derive(Debug, Deserialize)]
+struct MaterializeDatasourceSettings {
+    host: String,
+    port: u16,
+    username: String,
 }

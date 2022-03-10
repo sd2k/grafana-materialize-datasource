@@ -1,27 +1,6 @@
 use grafana_plugin_sdk::{backend, data};
 
 #[derive(Debug, thiserror::Error)]
-pub enum DatasourceSettingsError {
-    #[error("missing password")]
-    MissingPassword,
-
-    #[error("missing host")]
-    MissingHost,
-    #[error("invalid host")]
-    InvalidHost,
-
-    #[error("missing port")]
-    MissingPort,
-    #[error("invalid port")]
-    InvalidPort,
-
-    #[error("missing username")]
-    MissingUsername,
-    #[error("invalid username")]
-    InvalidUsername,
-}
-
-#[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error("stream already running")]
     StreamAlreadyRunning,
@@ -37,7 +16,7 @@ pub enum Error {
     UnknownPath(String),
 
     #[error("invalid datasource settings: {0}")]
-    InvalidDatasourceSettings(#[from] DatasourceSettingsError),
+    InvalidDatasourceSettings(serde_json::Error),
 
     #[error("Datasource not present on request")]
     MissingDatasource,

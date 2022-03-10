@@ -1,5 +1,5 @@
 /// The `grafana_plugin_sdk::backend::StreamService` implementation for the Console plugin.
-use futures_util::{StreamExt, TryStreamExt};
+use futures_util::TryStreamExt;
 use grafana_plugin_sdk::{backend, data};
 use tracing::debug;
 

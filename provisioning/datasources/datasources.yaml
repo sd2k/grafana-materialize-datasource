@@ -12,7 +12,5 @@ datasources:
     jsonData:
       host: materialized
       port: 6875
-    user: materialize
-    secureJsonData:
-      password: materialize
+      username: materialize
     isDefault: true

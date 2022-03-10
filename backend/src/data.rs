@@ -9,7 +9,6 @@ use tokio_postgres::Client;
 
 use crate::{rows_to_frame, Error, MaterializePlugin, Path, TailTarget};
 
-// TODO(bsull) - make this error better and impl From so that query_data compiles.
 #[derive(Debug, thiserror::Error)]
 #[error("Error querying backend for {}: {}", .ref_id, .source)]
 pub struct QueryError {

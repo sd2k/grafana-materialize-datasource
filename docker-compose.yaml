@@ -49,7 +49,7 @@ services:
       - rm -rf /usr/src/dist/gpx_grafana-materialize-datasource_linux_arm64 && cp target/debug/grafana-materialize-datasource /usr/src/dist/gpx_grafana-materialize-datasource_linux_arm64 && nc -z grafana 10001
 
   materialized:
-    image: materialize/materialized:mzbuild-MSD6JLI7ADXNVD5YT62PVO5FDREPHV5Y 
+    image: materialize/materialized:mzbuild-DJJ37LXVQTKZFWKSFMACGIB54E7SDIHN
     ports:
       - 6876:6875
     restart: on-failure
