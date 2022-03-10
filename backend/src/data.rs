@@ -87,35 +87,3 @@ impl backend::DataService for MaterializePlugin {
     }
 }
 
-// TODO(bsull): update these once we know what the request should look like.
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
-
-//     #[test]
-//     fn deserialize_request() {
-//         assert_eq!(
-//             serde_json::from_str::<MaterializeQueryDataRequest>(r#"{"path": "tasks"}"#).unwrap(),
-//             MaterializeQueryDataRequest {
-//                 target: "object",
-//                 object: ""
-//             }
-//         );
-//         assert_eq!(
-//             serde_json::from_str::<MaterializeQueryDataRequest>(
-//                 r#"{"path": "taskHistogram", "taskId": 1}"#
-//             )
-//             .unwrap(),
-//             MaterializeQueryDataRequest {
-//                 path: Path::TaskHistogram { task_id: TaskId(1) }
-//             }
-//         );
-//         assert_eq!(
-//             serde_json::from_str::<MaterializeQueryDataRequest>(r#"{"path": "resources"}"#)
-//                 .unwrap(),
-//             MaterializeQueryDataRequest {
-//                 path: Path::Resources
-//             }
-//         );
-//     }
-// }
