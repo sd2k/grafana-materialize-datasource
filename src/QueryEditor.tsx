@@ -40,7 +40,7 @@ export const QueryEditor = ({ datasource, onChange, onRunQuery, query }: Props):
 
   useEffect(() => {
     if (target === MaterializeTarget.Relation) {
-      datasource.getResource('/').then((options: string[]) => {
+      datasource.getResource('relations').then((options: string[]) => {
         setRelations(options.map((value) => ({ label: value, value })));
       });
     }

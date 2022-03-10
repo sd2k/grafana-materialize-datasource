@@ -51,7 +51,10 @@ impl backend::ResourceService for MaterializePlugin {
         &self,
         request: backend::CallResourceRequest,
     ) -> Result<(Self::InitialResponse, Self::Stream), Self::Error> {
-        // TODO: check the path.
+        match request.request.uri().path() {
+            "/relations" => {}
+            _ => return Err(ResourceError::NotFound),
+        };
         let datasource_settings = request
             .plugin_context
             .and_then(|pc| pc.datasource_instance_settings)
