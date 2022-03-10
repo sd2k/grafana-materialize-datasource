@@ -11,8 +11,15 @@ pub struct SourceName(String);
 impl FromStr for SourceName {
     type Err = Error;
     fn from_str(s: &str) -> Result<Self> {
-        // TODO(bsull): validate the source name
-        Ok(Self(s.to_string()))
+        if s.find(|c: char| !(c.is_ascii_alphanumeric() || c == '.' || c == '_'))
+            .is_some()
+        {
+            Err(Error::InvalidTailTarget(format!(
+                "Invalid relation name {s}"
+            )))
+        } else {
+            Ok(Self(s.to_string()))
+        }
     }
 }
 
