@@ -1,11 +1,12 @@
 use std::{fmt, str::FromStr};
 
 use serde::Deserialize;
+use serde_with::DeserializeFromStr;
 use tokio_postgres::{Client, Row, RowStream};
 
 use crate::{Error, Result};
 
-#[derive(Clone, Debug, Hash, PartialEq, Eq, Deserialize)]
+#[derive(Clone, Debug, Hash, PartialEq, Eq, DeserializeFromStr)]
 pub struct SourceName(String);
 
 impl FromStr for SourceName {
@@ -118,20 +119,18 @@ impl FromStr for Path {
     }
 }
 
-// TODO(bsull): fix these once we know what the path should look like as JSON.
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-//     #[test]
-//     fn deserialize_path() {
-//         assert_eq!(
-//             serde_json::from_str::<Path>(r#"{"path": "tasks"}"#).unwrap(),
-//             Path::Tasks
-//         );
-//         assert_eq!(
-//             serde_json::from_str::<Path>(r#"{"path": "task", "taskId": 1}"#).unwrap(),
-//             Path::TaskDetails { task_id: TaskId(1) }
-//         );
-//     }
-// }
+    #[test]
+    fn deserialize_path() {
+        assert_eq!(
+            serde_json::from_str::<Path>(r#"{"path": "tail", "target": "relation", "name": "some_table"}"#).unwrap(),
+            Path::Tail(TailTarget::Relation { name: "some_table".parse().unwrap() })
+        );
+        assert!(
+            serde_json::from_str::<Path>(r#"{"path": "tail", "target": "relation", "name": "DROP TABLE bobby_tables"}"#).is_err()
+        );
+    }
+}
