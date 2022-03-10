@@ -31,17 +31,8 @@ impl fmt::Display for SourceName {
 }
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq, Deserialize)]
+// TODO: actually do some validation here.
 pub struct SelectStatement(String);
-
-impl SelectStatement {
-    fn to_path_segment(&self) -> String {
-        todo!()
-    }
-
-    fn from_path_segment(path_segment: &str) -> Result<Self> {
-        todo!()
-    }
-}
 
 impl fmt::Display for SelectStatement {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -95,7 +86,7 @@ impl fmt::Display for Path {
         match self {
             Self::Tail(TailTarget::Relation { name }) => write!(f, "tail/relation/{}", name),
             Self::Tail(TailTarget::Select { statement }) => {
-                write!(f, "tail/select/{}", statement.to_path_segment())
+                write!(f, "tail/select/{}", statement)
             }
         }
     }
@@ -111,7 +102,7 @@ impl FromStr for Path {
                 name: name.parse()?,
             })),
             (Some("tail"), Some("select"), Some(query)) => Ok(Self::Tail(TailTarget::Select {
-                statement: SelectStatement::from_path_segment(query)?,
+                statement: SelectStatement(query.to_string()),
             })),
             (Some("tail"), _, _) => Err(Error::MissingTailTarget),
             _ => Err(Error::UnknownPath(s.to_string())),
@@ -124,13 +115,20 @@ mod tests {
     use super::*;
 
     #[test]
-    fn deserialize_path() {
+    fn deserialize_relation() {
         assert_eq!(
             serde_json::from_str::<Path>(r#"{"path": "tail", "target": "relation", "name": "some_table"}"#).unwrap(),
             Path::Tail(TailTarget::Relation { name: "some_table".parse().unwrap() })
         );
         assert!(
-            serde_json::from_str::<Path>(r#"{"path": "tail", "target": "relation", "name": "DROP TABLE bobby_tables"}"#).is_err()
+            serde_json::from_str::<Path>(r#"{"path": "tail", "target": "relation", "name": "little bobby tables"}"#).is_err(),
+        );
+    }
+
+    #[test]
+    fn deserialize_statement() {
+        assert!(
+            serde_json::from_str::<Path>(r#"{"path": "tail", "target": "select", "statement": "SELECT * FROM my_table"}"#).is_ok()
         );
     }
 }
