@@ -39,6 +39,8 @@ async fn query_data_single(
     let rows = target.select_all(&client).await?;
     let mut frame = rows_to_frame(rows);
 
+    // Set the channel of the frame, indicating to Grafana that it should switch to
+    // streaming.
     frame.set_channel(
         format!("ds/{}/{}", uid, Path::Tail(target))
             .parse()

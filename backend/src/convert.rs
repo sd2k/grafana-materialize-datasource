@@ -1,3 +1,5 @@
+use std::iter;
+
 use chrono::prelude::*;
 use grafana_plugin_sdk::{arrow2::array::Array, data, prelude::*};
 use rust_decimal::prelude::*;
@@ -5,6 +7,9 @@ use tokio_postgres::{
     types::{FromSql, Type},
     Row,
 };
+
+const MZ_TIMESTAMP: &str = "mz_timestamp";
+const MZ_DIFF: &str = "mz_diff";
 
 fn load_field<'a, T>(rows: &'a [Row], column: usize, name: &str) -> data::Field
 where
@@ -19,7 +24,7 @@ where
 }
 
 fn unsupported_type_field(n: usize, type_: &Type, name: &str) -> data::Field {
-    std::iter::repeat_with(|| format!("unsupported column type {type_}"))
+    iter::repeat_with(|| format!("unsupported column type {type_}"))
         .take(n)
         .into_field(name)
 }
@@ -31,9 +36,22 @@ pub fn rows_to_frame(rows: Vec<Row>) -> data::Frame {
         return frame;
     }
 
+    let columns = rows[0].columns();
+    let (has_mz_timestamp, has_mz_diff) = (
+        columns.iter().any(|col| col.name() == MZ_TIMESTAMP),
+        columns.iter().any(|col| col.name() == MZ_DIFF),
+    );
+    if !has_mz_timestamp {
+        let now = Utc::now();
+        frame.add_field(iter::repeat(now).take(rows.len()).into_field(MZ_TIMESTAMP))
+    }
+    if !has_mz_diff {
+        frame.add_field(iter::repeat::<Option<i64>>(None).take(rows.len()).into_opt_field(MZ_DIFF))
+    }
+
     for (i, column) in rows[0].columns().iter().enumerate() {
         let name = column.name();
-        let field = if name == "mz_timestamp" {
+        let field = if name == MZ_TIMESTAMP {
             rows.iter()
                 .map(|row| {
                     row.get::<_, Decimal>(i)
