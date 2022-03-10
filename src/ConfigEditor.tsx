@@ -3,8 +3,7 @@ import { DataSourcePluginOptionsEditorProps, DataSourceSettings } from '@grafana
 import { DataSourceOptions } from './types';
 import { FieldSet, Form, InlineField, Input } from '@grafana/ui';
 
-interface Props extends DataSourcePluginOptionsEditorProps<DataSourceOptions> { }
-
+interface Props extends DataSourcePluginOptionsEditorProps<DataSourceOptions> {}
 
 export const ConfigEditor = ({ options, onOptionsChange }: Props): JSX.Element => {
   const onSettingsChange = useCallback(
@@ -21,28 +20,36 @@ export const ConfigEditor = ({ options, onOptionsChange }: Props): JSX.Element =
       <Form onSubmit={onOptionsChange}>
         {() => (
           <>
-            <FieldSet label="Connection" >
+            <FieldSet label="Connection">
               <InlineField label="Host" labelWidth={20}>
                 <Input
                   value={options.jsonData.host}
-                  onChange={(event) => onSettingsChange({ jsonData: { ...options.jsonData, host: event.currentTarget.value } })}
+                  onChange={(event) =>
+                    onSettingsChange({ jsonData: { ...options.jsonData, host: event.currentTarget.value } })
+                  }
                 />
               </InlineField>
 
-              <InlineField label="Port" labelWidth={20} >
+              <InlineField label="Port" labelWidth={20}>
                 <Input
                   type="number"
                   value={options.jsonData.port}
                   placeholder="6875"
-                  onChange={(event) => onSettingsChange({ jsonData: { ...options.jsonData, port: parseInt(event.currentTarget.value, 10) } })}
+                  onChange={(event) =>
+                    onSettingsChange({
+                      jsonData: { ...options.jsonData, port: parseInt(event.currentTarget.value, 10) },
+                    })
+                  }
                 />
               </InlineField>
 
-              <InlineField label="Username" labelWidth={20} >
+              <InlineField label="Username" labelWidth={20}>
                 <Input
                   value={options.jsonData.username}
                   placeholder="materialize"
-                  onChange={(event) => onSettingsChange({ jsonData: { ...options.jsonData, username: event.currentTarget.value } })}
+                  onChange={(event) =>
+                    onSettingsChange({ jsonData: { ...options.jsonData, username: event.currentTarget.value } })
+                  }
                 />
               </InlineField>
             </FieldSet>
