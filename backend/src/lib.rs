@@ -1,3 +1,4 @@
+mod convert;
 mod data;
 mod diagnostics;
 mod error;
@@ -5,10 +6,12 @@ mod path;
 mod resource;
 mod stream;
 
-use error::{DatasourceSettingsError, Error, Result};
 use grafana_plugin_sdk::backend;
-use path::{Path, TailTarget};
 use tokio_postgres::{Client, Config, NoTls};
+
+use convert::rows_to_frame;
+use error::{DatasourceSettingsError, Error, Result};
+use path::{Path, TailTarget};
 
 #[derive(Clone, Debug, Default)]
 pub struct MaterializePlugin;

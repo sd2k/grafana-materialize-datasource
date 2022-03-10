@@ -4,10 +4,10 @@ use futures_util::{
 };
 use serde::Deserialize;
 
-use grafana_plugin_sdk::{backend, data};
+use grafana_plugin_sdk::backend;
 use tokio_postgres::Client;
 
-use crate::{Error, MaterializePlugin, Path, TailTarget};
+use crate::{rows_to_frame, Error, MaterializePlugin, Path, TailTarget};
 
 // TODO(bsull) - make this error better and impl From so that query_data compiles.
 #[derive(Debug, thiserror::Error)]
@@ -38,8 +38,7 @@ async fn query_data_single(
         .map(|req: MaterializeQueryDataRequest| req.target)
         .map_err(|e| Error::InvalidTailTarget(e.to_string()))?;
     let rows = target.select_all(&client).await?;
-    // TODO: use `rows` to create `frame`.
-    let mut frame = data::Frame::new("");
+    let mut frame = rows_to_frame(rows);
 
     frame.set_channel(
         format!("ds/{}/{}", uid, Path::Tail(target))

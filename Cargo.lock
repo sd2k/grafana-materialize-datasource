@@ -33,6 +33,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bf7d0a018de4f6aa429b9d33d69edf69072b1c5b1cb8d3e4a5f7ef898fc3eb76"
 
 [[package]]
+name = "arrayvec"
+version = "0.7.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8da52d66c7071e2e3fa2a1e5c6d088fec47b593032b254f5e980de8ea54454d6"
+
+[[package]]
 name = "arrow-format"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -385,6 +391,7 @@ dependencies = [
  "grafana-plugin-sdk",
  "http",
  "rand",
+ "rust_decimal",
  "serde",
  "serde_json",
  "thiserror",
@@ -398,7 +405,7 @@ dependencies = [
 [[package]]
 name = "grafana-plugin-sdk"
 version = "0.1.0"
-source = "git+https://github.com/grafana/grafana-plugin-sdk-rust?branch=return-stream-from-query-data#dd204a4e37cd414174b3fa5bb95003cfe3105f7c"
+source = "git+https://github.com/grafana/grafana-plugin-sdk-rust?branch=more-field-type-impls#91e1c6701c35ef176d72ecf7947ac6ac1df6b898"
 dependencies = [
  "arrow2",
  "chrono",
@@ -430,7 +437,7 @@ dependencies = [
 [[package]]
 name = "grafana-plugin-sdk-macros"
 version = "0.1.0"
-source = "git+https://github.com/grafana/grafana-plugin-sdk-rust?branch=return-stream-from-query-data#dd204a4e37cd414174b3fa5bb95003cfe3105f7c"
+source = "git+https://github.com/grafana/grafana-plugin-sdk-rust?branch=more-field-type-impls#91e1c6701c35ef176d72ecf7947ac6ac1df6b898"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -841,6 +848,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "postgres"
+version = "0.19.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "eb76d6535496f633fa799bb872ffb4790e9cbdedda9d35564ca0252f930c0dd5"
+dependencies = [
+ "bytes",
+ "fallible-iterator",
+ "futures",
+ "log",
+ "tokio",
+ "tokio-postgres",
+]
+
+[[package]]
 name = "postgres-protocol"
 version = "0.6.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -865,8 +886,11 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "04619f94ba0cc80999f4fc7073607cb825bc739a883cb6d20900fc5e009d6b0d"
 dependencies = [
  "bytes",
+ "chrono",
  "fallible-iterator",
  "postgres-protocol",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -1018,6 +1042,21 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3acd125665422973a33ac9d3dd2df85edad0f4ae9b00dafb1a05e43a9f5ef8e7"
 dependencies = [
  "winapi",
+]
+
+[[package]]
+name = "rust_decimal"
+version = "1.22.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d37baa70cf8662d2ba1c1868c5983dda16ef32b105cce41fb5c47e72936a90b3"
+dependencies = [
+ "arrayvec",
+ "byteorder",
+ "bytes",
+ "num-traits",
+ "postgres",
+ "serde",
+ "tokio-postgres",
 ]
 
 [[package]]

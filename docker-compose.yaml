@@ -2,7 +2,7 @@ version: "3"
 
 services:
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:main
     ports:
       - "3000:3000"
     restart: on-failure
@@ -16,7 +16,7 @@ services:
       GF_PLUGINS_ENABLE_ALPHA: "true"
       GF_SERVER_ROOT_URL: http://admin:admin@grafana:3000
       JAEGER_AGENT_HOST: "jaeger"
-      RUST_LOG: grafana_plugin_sdk=debug,info
+      RUST_LOG: grafana_plugin_sdk=debug,grafana_materialize_datasource=debug,info
     volumes:
       - "./provisioning:/etc/grafana/provisioning"
       - ".:/var/lib/grafana/plugins/grafana-materialize-datasource"
@@ -50,7 +50,7 @@ services:
       - rm -rf /usr/src/dist/gpx_grafana-materialize-datasource_linux_arm64 && cp target/debug/grafana-materialize-datasource /usr/src/dist/gpx_grafana-materialize-datasource_linux_arm64 && nc -z grafana 10001
 
   materialized:
-    image: sd2k/materialized:b600a4c1b
+    image: materialize/materialized:mzbuild-MSD6JLI7ADXNVD5YT62PVO5FDREPHV5Y 
     ports:
       - 6876:6875
     restart: on-failure

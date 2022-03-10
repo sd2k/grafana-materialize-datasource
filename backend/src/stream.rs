@@ -1,42 +1,9 @@
 /// The `grafana_plugin_sdk::backend::StreamService` implementation for the Console plugin.
-use futures_util::TryStreamExt;
-use grafana_plugin_sdk::{backend, data, prelude::IntoField};
-use tokio_postgres::Row;
+use futures_util::{StreamExt, TryStreamExt};
+use grafana_plugin_sdk::{backend, data};
 use tracing::debug;
 
-use crate::{Error, MaterializePlugin, Path, Result};
-
-/// Convert some rows returned from Materialize to a Grafana Plugin SDK Frame.
-fn rows_to_frame(rows: Vec<Row>) -> Result<data::Frame> {
-    let mut frame = data::Frame::new("tail");
-    if rows.is_empty() {
-        return Ok(frame);
-    }
-
-    return Ok(frame);
-
-    // TODO: this inner type (i32) is not actually known at compile time so we'll
-    // need to do some boxing.
-    let mut columns: Vec<Vec<i32>> = rows[0]
-        .columns()
-        .iter()
-        .map(|_| Vec::with_capacity(rows.len()))
-        .collect();
-    let names: Vec<_> = rows[0]
-        .columns()
-        .iter()
-        .map(|x| x.name().to_string())
-        .collect();
-    for row in rows {
-        for (new_column, row_column) in columns.iter_mut().zip(row.columns()) {
-            new_column.push(row.get(row_column.name()));
-        }
-    }
-    for (new_column, name) in columns.into_iter().zip(names) {
-        frame.add_field(new_column.into_field(&name))
-    }
-    Ok(frame)
-}
+use crate::{rows_to_frame, Error, MaterializePlugin, Path, Result};
 
 /// Convert a Grafana Plugin SDK Frame to some initial data to send to new subscribers.
 fn frame_to_initial_data(frame: data::Frame) -> Result<backend::InitialData> {
@@ -71,7 +38,7 @@ impl backend::StreamService for MaterializePlugin {
 
         Ok(backend::SubscribeStreamResponse::new(
             backend::SubscribeStreamStatus::Ok,
-            Some(frame_to_initial_data(rows_to_frame(initial_rows)?)?),
+            Some(frame_to_initial_data(rows_to_frame(initial_rows))?),
         ))
     }
 
@@ -98,12 +65,10 @@ impl backend::StreamService for MaterializePlugin {
                     .await?
                     .map_err(Error::Connection)
                     .and_then(|row| async {
-                        rows_to_frame(vec![row]).and_then(|frame| {
-                            frame
-                                .check()
-                                .map_err(Error::Data)
-                                .and_then(|f| Ok(backend::StreamPacket::from_frame(f)?))
-                        })
+                        rows_to_frame(vec![row])
+                            .check()
+                            .map_err(Error::Data)
+                            .and_then(|f| Ok(backend::StreamPacket::from_frame(f)?))
                     }),
             ),
         };
