@@ -13,7 +13,9 @@ export class DataSource extends DataSourceWithBackend<MaterializeQuery, DataSour
 
   streamOptionsProvider = (request: DataQueryRequest<MaterializeQuery>): Partial<StreamingFrameOptions> => {
     // const shouldOverwrite = request.targets.some((target) => target.path === ConsolePathName.TaskHistogram);
-    return { maxLength: 10000 /*, action: shouldOverwrite ? StreamingFrameAction.Replace : StreamingFrameAction.Append */ };
+    return {
+      maxLength: 10000 /*, action: shouldOverwrite ? StreamingFrameAction.Replace : StreamingFrameAction.Append */,
+    };
   };
 
   async metricFindQuery(query: VariableQuery): Promise<MetricFindValue[]> {

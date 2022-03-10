@@ -11,7 +11,11 @@ type Props = QueryEditorProps<DataSource, MaterializeQuery, DataSourceOptions>;
 
 const targetOptions = [
   { label: 'Relation', value: MaterializeTarget.Relation, description: 'Tail the output of a source, table or view.' },
-  { label: 'Select statement', value: MaterializeTarget.SelectStatement, description: 'Tail the results of a select statement.' },
+  {
+    label: 'Select statement',
+    value: MaterializeTarget.SelectStatement,
+    description: 'Tail the results of a select statement.',
+  },
 ];
 
 export const QueryEditor = ({ datasource, onChange, onRunQuery, query }: Props): JSX.Element => {
@@ -19,11 +23,11 @@ export const QueryEditor = ({ datasource, onChange, onRunQuery, query }: Props):
   const { target } = query;
 
   const onTargetChange = (event: SelectableValue<MaterializeTarget>) => {
-    onChange({ ...query, target: event.value ?? MaterializeTarget.Relation })
+    onChange({ ...query, target: event.value ?? MaterializeTarget.Relation });
   };
   const onRelationChange = (event: SelectableValue<string>) => {
     if (target === MaterializeTarget.Relation) {
-      onChange({ ...query, name: event.value })
+      onChange({ ...query, name: event.value });
     }
   };
   const onSelectStatementChange = (event: SelectableValue<string>) => {
@@ -36,17 +40,23 @@ export const QueryEditor = ({ datasource, onChange, onRunQuery, query }: Props):
 
   useEffect(() => {
     if (target === MaterializeTarget.Relation) {
-      datasource.getResource("/").then((options: string[]) => {
+      datasource.getResource('/').then((options: string[]) => {
         setRelations(options.map((value) => ({ label: value, value })));
-      })
+      });
     }
-  }, [target])
+  }, [datasource, target]);
 
   return (
     <div className="gf-form">
       <Select menuShouldPortal options={targetOptions} value={target} onChange={onTargetChange} />
       {target === MaterializeTarget.Relation ? (
-        <Select menuShouldPortal options={relations} value={query.name} onChange={onRelationChange} onBlur={onRunQuery} />
+        <Select
+          menuShouldPortal
+          options={relations}
+          value={query.name}
+          onChange={onRelationChange}
+          onBlur={onRunQuery}
+        />
       ) : null}
       {target === MaterializeTarget.SelectStatement ? (
         <Input value={query.selectStatement} onChange={onSelectStatementChange} onBlur={onRunQuery} />

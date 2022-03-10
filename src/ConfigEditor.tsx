@@ -3,7 +3,7 @@ import { DataSourcePluginOptionsEditorProps } from '@grafana/data';
 import { DataSourceHttpSettings } from '@grafana/ui';
 import { DataSourceOptions } from './types';
 
-interface Props extends DataSourcePluginOptionsEditorProps<DataSourceOptions> { }
+interface Props extends DataSourcePluginOptionsEditorProps<DataSourceOptions> {}
 
 export class ConfigEditor extends PureComponent<Props> {
   render() {
