@@ -152,50 +152,20 @@ mod tests {
     use super::*;
 
     #[test]
-    fn deserialize_relation() {
-        assert_eq!(
-            serde_json::from_str::<Path>(
-                r#"{"path": "tail", "target": "relation", "name": "some_table"}"#
-            )
-            .unwrap(),
-            Path::Tail(TailTarget::Relation {
-                name: "some_table".parse().unwrap()
-            })
-        );
-        assert!(serde_json::from_str::<Path>(
-            r#"{"path": "tail", "target": "relation", "name": "little bobby tables"}"#
-        )
-        .is_err(),);
-    }
-
-    #[test]
-    fn deserialize_statement() {
-        assert_eq!(
-            serde_json::from_str::<Path>(
-                r#"{"path": "tail", "target": "select", "statement": "SELECT * FROM my_table"}"#
-            )
-            .unwrap(),
-            Path::Tail(TailTarget::Select {
-                statement: SelectStatement("SELECT * FROM my_table".to_string())
-            })
-        );
-    }
-
-    #[test]
     fn path_display() {
         assert_eq!(
             Path::Tail(TailTarget::Relation {
-                name: SourceName("some_table".to_string())
+                name: SourceName("some_table".parse().unwrap())
             })
             .to_path(),
             "tail/relation/some_table"
         );
         assert_eq!(
             Path::Tail(TailTarget::Select {
-                statement: SelectStatement("SELECT * FROM my_table".to_string())
+                query_id: QueryId::from_statement(&"SELECT * FROM my_table".parse().unwrap())
             })
             .to_path(),
-            "tail/select/U0VMRUNUICogRlJPTSBteV90YWJsZQ=="
+            "tail/select/9ebfce3b05a248842876e8ed1706a451"
         );
     }
 
@@ -204,15 +174,15 @@ mod tests {
         assert_eq!(
             "tail/relation/some_table".parse::<Path>().unwrap(),
             Path::Tail(TailTarget::Relation {
-                name: SourceName("some_table".to_string())
+                name: SourceName("some_table".parse().unwrap())
             })
         );
         assert_eq!(
-            "tail/select/U0VMRUNUICogRlJPTSBteV90YWJsZQ=="
+            "tail/select/9ebfce3b05a248842876e8ed1706a451"
                 .parse::<Path>()
                 .unwrap(),
             Path::Tail(TailTarget::Select {
-                statement: SelectStatement("SELECT * FROM my_table".to_string())
+                query_id: QueryId::from_statement(&"SELECT * FROM my_table".parse().unwrap())
             })
         );
     }

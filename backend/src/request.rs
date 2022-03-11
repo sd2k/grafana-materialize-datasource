@@ -56,6 +56,7 @@ impl Into<queries::Path> for Path {
 
 #[cfg(test)]
 mod test {
+    use super::*;
     #[test]
     fn deserialize_relation() {
         assert_eq!(
@@ -64,7 +65,7 @@ mod test {
             )
             .unwrap(),
             Path::Tail(TailTarget::Relation {
-                name: "some_table".parse().unwrap()
+                name: SourceName("some_table".parse().unwrap())
             })
         );
         assert!(serde_json::from_str::<Path>(
@@ -81,7 +82,7 @@ mod test {
             )
             .unwrap(),
             Path::Tail(TailTarget::Select {
-                statement: SelectStatement("SELECT * FROM my_table".to_string())
+                statement: SelectStatement("SELECT * FROM my_table".parse().unwrap())
             })
         );
     }
