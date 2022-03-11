@@ -7,7 +7,7 @@ use serde::Deserialize;
 use grafana_plugin_sdk::backend;
 use tokio_postgres::Client;
 
-use crate::{rows_to_frame, Error, MaterializePlugin, Path, TailTarget};
+use crate::{path::PathDisplay, rows_to_frame, Error, MaterializePlugin, Path, TailTarget};
 
 #[derive(Debug, thiserror::Error)]
 #[error("Error querying backend for {}: {}", .ref_id, .source)]
@@ -42,7 +42,7 @@ async fn query_data_single(
     // Set the channel of the frame, indicating to Grafana that it should switch to
     // streaming.
     frame.set_channel(
-        format!("ds/{}/{}", uid, Path::Tail(target))
+        format!("ds/{}/{}", uid, Path::Tail(target).to_path())
             .parse()
             .expect("constructing channel"),
     );
@@ -88,4 +88,3 @@ impl backend::DataService for MaterializePlugin {
         )
     }
 }
-

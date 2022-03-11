@@ -1,10 +1,29 @@
-use std::{fmt, str::FromStr};
+use std::{
+    fmt::{self, Write},
+    str::FromStr,
+};
 
 use serde::Deserialize;
 use serde_with::DeserializeFromStr;
 use tokio_postgres::{Client, Row, RowStream};
 
 use crate::{Error, Result};
+
+/// Trait describing how a type should be serialized to a [`Channel`]'s path.
+///
+/// Channel paths can only contain a alphanumeric + a few other characters,
+/// so some types may need to encode their data differently.
+///
+/// [`Channel`]: grafana_plugin_sdk::live::Channel
+pub trait PathDisplay {
+    fn fmt_path(&self, f: &mut String) -> fmt::Result;
+    fn to_path(&self) -> String {
+        let mut s = String::new();
+        self.fmt_path(&mut s)
+            .expect("writing to a string must not fail");
+        s
+    }
+}
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq, DeserializeFromStr)]
 pub struct SourceName(String);
@@ -21,6 +40,12 @@ impl FromStr for SourceName {
         } else {
             Ok(Self(s.to_string()))
         }
+    }
+}
+
+impl PathDisplay for SourceName {
+    fn fmt_path(&self, f: &mut String) -> fmt::Result {
+        f.write_str(&self.0)
     }
 }
 
@@ -72,6 +97,21 @@ impl TailTarget {
     }
 }
 
+impl PathDisplay for TailTarget {
+    fn fmt_path(&self, f: &mut String) -> fmt::Result {
+        match self {
+            Self::Relation { name } => {
+                f.write_str("relation/")?;
+                name.fmt_path(f)?;
+            }
+            Self::Select { statement } => {
+                write!(f, "select/{}", base64::encode(statement.0.as_bytes()))?;
+            }
+        }
+        Ok(())
+    }
+}
+
 #[derive(Clone, Debug, Deserialize, PartialEq, Eq)]
 #[serde(tag = "path")]
 #[non_exhaustive]
@@ -79,6 +119,16 @@ pub enum Path {
     /// Tail the output of a relation.
     #[serde(rename = "tail")]
     Tail(TailTarget),
+}
+
+impl PathDisplay for Path {
+    fn fmt_path(&self, f: &mut String) -> fmt::Result {
+        f.write_str("tail/")?;
+        match self {
+            Self::Tail(target) => target.fmt_path(f)?,
+        };
+        Ok(())
+    }
 }
 
 impl fmt::Display for Path {
@@ -92,6 +142,8 @@ impl fmt::Display for Path {
     }
 }
 
+// Note that this differs from the `Deserialize` impl in that it assumes the SQL statement
+// is base64 encoded - this should be tidied up at some point.
 impl FromStr for Path {
     type Err = Error;
 
@@ -101,9 +153,17 @@ impl FromStr for Path {
             (Some("tail"), Some("relation"), Some(name)) => Ok(Self::Tail(TailTarget::Relation {
                 name: name.parse()?,
             })),
-            (Some("tail"), Some("select"), Some(query)) => Ok(Self::Tail(TailTarget::Select {
-                statement: SelectStatement(query.to_string()),
-            })),
+            (Some("tail"), Some("select"), Some(query_base64)) => {
+                Ok(Self::Tail(TailTarget::Select {
+                    statement: SelectStatement(
+                        String::from_utf8(
+                            base64::decode(&query_base64)
+                                .map_err(|e| Error::InvalidTailTarget(e.to_string()))?,
+                        )
+                        .map_err(|e| Error::InvalidTailTarget(e.to_string()))?,
+                    ),
+                }))
+            }
             (Some("tail"), _, _) => Err(Error::MissingTailTarget),
             _ => Err(Error::UnknownPath(s.to_string())),
         }
@@ -117,18 +177,66 @@ mod tests {
     #[test]
     fn deserialize_relation() {
         assert_eq!(
-            serde_json::from_str::<Path>(r#"{"path": "tail", "target": "relation", "name": "some_table"}"#).unwrap(),
-            Path::Tail(TailTarget::Relation { name: "some_table".parse().unwrap() })
+            serde_json::from_str::<Path>(
+                r#"{"path": "tail", "target": "relation", "name": "some_table"}"#
+            )
+            .unwrap(),
+            Path::Tail(TailTarget::Relation {
+                name: "some_table".parse().unwrap()
+            })
         );
-        assert!(
-            serde_json::from_str::<Path>(r#"{"path": "tail", "target": "relation", "name": "little bobby tables"}"#).is_err(),
-        );
+        assert!(serde_json::from_str::<Path>(
+            r#"{"path": "tail", "target": "relation", "name": "little bobby tables"}"#
+        )
+        .is_err(),);
     }
 
     #[test]
     fn deserialize_statement() {
-        assert!(
-            serde_json::from_str::<Path>(r#"{"path": "tail", "target": "select", "statement": "SELECT * FROM my_table"}"#).is_ok()
+        assert_eq!(
+            serde_json::from_str::<Path>(
+                r#"{"path": "tail", "target": "select", "statement": "SELECT * FROM my_table"}"#
+            )
+            .unwrap(),
+            Path::Tail(TailTarget::Select {
+                statement: SelectStatement("SELECT * FROM my_table".to_string())
+            })
+        );
+    }
+
+    #[test]
+    fn path_display() {
+        assert_eq!(
+            Path::Tail(TailTarget::Relation {
+                name: SourceName("some_table".to_string())
+            })
+            .to_path(),
+            "tail/relation/some_table"
+        );
+        assert_eq!(
+            Path::Tail(TailTarget::Select {
+                statement: SelectStatement("SELECT * FROM my_table".to_string())
+            })
+            .to_path(),
+            "tail/select/U0VMRUNUICogRlJPTSBteV90YWJsZQ=="
+        );
+    }
+
+    #[test]
+    fn path_from_str() {
+        assert_eq!(
+            "tail/relation/some_table".parse::<Path>().unwrap(),
+            Path::Tail(TailTarget::Relation {
+                name: SourceName("some_table".to_string())
+            })
+        );
+        assert_eq!(
+            "tail/select/U0VMRUNUICogRlJPTSBteV90YWJsZQ=="
+                .parse::<Path>()
+                .unwrap(),
+            Path::Tail(TailTarget::Select {
+                statement: SelectStatement("SELECT * FROM my_table".to_string())
+            })
         );
     }
 }
