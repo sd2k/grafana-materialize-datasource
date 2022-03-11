@@ -32,7 +32,7 @@ RUN \
   --mount=type=cache,id=grafana-materialize-datasource-cargo-registry-cache,target=/usr/local/cargo/registry \
   cargo build --release
 
-FROM grafana/grafana:8.4.3
+FROM grafana/grafana:main
 
 # Used to get the target plugin binary name.
 ARG TARGETPLATFORM
