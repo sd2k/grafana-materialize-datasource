@@ -32,7 +32,7 @@ export const QueryEditor = ({ datasource, onChange, onRunQuery, query }: Props):
   };
   const onSelectStatementChange = (event: SelectableValue<string>) => {
     if (target === MaterializeTarget.SelectStatement) {
-      onChange({ ...query, selectStatement: event.target.value });
+      onChange({ ...query, statement: event.target.value });
     }
   };
 
@@ -59,7 +59,7 @@ export const QueryEditor = ({ datasource, onChange, onRunQuery, query }: Props):
         />
       ) : null}
       {target === MaterializeTarget.SelectStatement ? (
-        <Input value={query.selectStatement} onChange={onSelectStatementChange} onBlur={onRunQuery} />
+        <Input value={query.statement} onChange={onSelectStatementChange} onBlur={onRunQuery} />
       ) : null}
     </div>
   );
