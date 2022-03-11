@@ -2,7 +2,7 @@ import { defaults } from 'lodash';
 
 import React, { useEffect, useState } from 'react';
 import { QueryEditorProps, SelectableValue } from '@grafana/data';
-import { Input, Select } from '@grafana/ui';
+import { Select, TextArea } from '@grafana/ui';
 
 import { DataSource } from './datasource';
 import { defaultQuery, DataSourceOptions, MaterializeQuery, MaterializeTarget } from './types';
@@ -59,7 +59,7 @@ export const QueryEditor = ({ datasource, onChange, onRunQuery, query }: Props):
         />
       ) : null}
       {target === MaterializeTarget.SelectStatement ? (
-        <Input value={query.statement} onChange={onSelectStatementChange} onBlur={onRunQuery} />
+        <TextArea value={query.statement} onChange={onSelectStatementChange} onBlur={onRunQuery} />
       ) : null}
     </div>
   );
