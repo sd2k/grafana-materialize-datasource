@@ -6,5 +6,5 @@ use grafana_materialize_datasource::MaterializePlugin;
     shutdown_handler = "0.0.0.0:10001"
 )]
 async fn plugin() -> ConsolePlugin {
-    MaterializePlugin
+    MaterializePlugin::default()
 }

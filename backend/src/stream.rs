@@ -3,7 +3,7 @@ use futures_util::TryStreamExt;
 use grafana_plugin_sdk::{backend, data};
 use tracing::debug;
 
-use crate::{rows_to_frame, Error, MaterializePlugin, Path, Result};
+use crate::{path, rows_to_frame, Error, MaterializePlugin, Result};
 
 /// Convert a Grafana Plugin SDK Frame to some initial data to send to new subscribers.
 fn frame_to_initial_data(frame: data::Frame) -> Result<backend::InitialData> {
@@ -25,16 +25,16 @@ impl backend::StreamService for MaterializePlugin {
         &self,
         request: backend::SubscribeStreamRequest,
     ) -> Result<backend::SubscribeStreamResponse> {
+        dbg!(&request);
         let path = request.path()?;
+        let target = self.target(path).await?;
         let datasource_settings = request
             .plugin_context
             .datasource_instance_settings
             .ok_or(Error::MissingDatasource)?;
         let client = self.get_client(&datasource_settings).await?;
 
-        let initial_rows = match path {
-            Path::Tail(source) => source.select_all(&client).await?,
-        };
+        let initial_rows = target.select_all(&client).await?;
 
         Ok(backend::SubscribeStreamResponse::new(
             backend::SubscribeStreamStatus::Ok,
@@ -52,26 +52,25 @@ impl backend::StreamService for MaterializePlugin {
     /// `subscribe_stream` method which is called for every client that wishes to connect.
     async fn run_stream(&self, request: backend::RunStreamRequest) -> Result<Self::Stream> {
         let path = request.path()?;
+        let target = self.target(path).await?;
         let datasource_settings = request
             .plugin_context
             .datasource_instance_settings
             .ok_or(Error::MissingDatasource)?;
         let client = self.get_client(&datasource_settings).await?;
 
-        let stream = match path {
-            Path::Tail(target) => Box::pin(
-                target
-                    .tail(&client)
-                    .await?
-                    .map_err(Error::Connection)
-                    .and_then(|row| async {
-                        rows_to_frame(vec![row])
-                            .check()
-                            .map_err(Error::Data)
-                            .and_then(|f| Ok(backend::StreamPacket::from_frame(f)?))
-                    }),
-            ),
-        };
+        let stream = Box::pin(
+            target
+                .tail(&client)
+                .await?
+                .map_err(Error::Connection)
+                .and_then(|row| async {
+                    rows_to_frame(vec![row])
+                        .check()
+                        .map_err(Error::Data)
+                        .and_then(|f| Ok(backend::StreamPacket::from_frame(f)?))
+                }),
+        );
 
         Ok(stream)
     }
@@ -93,7 +92,7 @@ trait StreamRequestExt {
     fn datasource_instance_settings(&self) -> Option<&backend::DataSourceInstanceSettings>;
 
     /// The parsed `Path`, or an `Error` if parsing failed.
-    fn path(&self) -> Result<Path> {
+    fn path(&self) -> Result<path::Path> {
         let path = self.raw_path();
         path.parse()
             .map_err(|_| Error::UnknownPath(path.to_string()))

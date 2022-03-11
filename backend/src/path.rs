@@ -3,11 +3,7 @@ use std::{
     str::FromStr,
 };
 
-use serde::Deserialize;
-use serde_with::DeserializeFromStr;
-use tokio_postgres::{Client, Row, RowStream};
-
-use crate::{Error, Result};
+use crate::{queries, Error, Result};
 
 /// Trait describing how a type should be serialized to a [`Channel`]'s path.
 ///
@@ -25,27 +21,18 @@ pub trait PathDisplay {
     }
 }
 
-#[derive(Clone, Debug, Hash, PartialEq, Eq, DeserializeFromStr)]
-pub struct SourceName(String);
+#[derive(Clone, Debug, Hash, PartialEq, Eq)]
+pub struct SourceName(queries::SourceName);
 
-impl FromStr for SourceName {
-    type Err = Error;
-    fn from_str(s: &str) -> Result<Self> {
-        if s.find(|c: char| !(c.is_ascii_alphanumeric() || c == '.' || c == '_'))
-            .is_some()
-        {
-            Err(Error::InvalidTailTarget(format!(
-                "Invalid relation name {s}"
-            )))
-        } else {
-            Ok(Self(s.to_string()))
-        }
+impl Into<queries::SourceName> for SourceName {
+    fn into(self) -> queries::SourceName {
+        self.0
     }
 }
 
 impl PathDisplay for SourceName {
     fn fmt_path(&self, f: &mut String) -> fmt::Result {
-        f.write_str(&self.0)
+        f.write_str(self.0.as_str())
     }
 }
 
@@ -55,9 +42,17 @@ impl fmt::Display for SourceName {
     }
 }
 
-#[derive(Clone, Debug, Hash, PartialEq, Eq, Deserialize)]
+impl FromStr for SourceName {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self> {
+        Ok(Self(s.parse()?))
+    }
+}
+
+#[derive(Clone, Debug, Hash, PartialEq, Eq)]
 // TODO: actually do some validation here.
-pub struct SelectStatement(String);
+pub struct SelectStatement(queries::SelectStatement);
 
 impl fmt::Display for SelectStatement {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -65,36 +60,26 @@ impl fmt::Display for SelectStatement {
     }
 }
 
-#[derive(Clone, Debug, Deserialize, Hash, PartialEq, Eq)]
-#[serde(tag = "target", rename_all = "camelCase")]
+#[derive(Clone, Debug, Hash, PartialEq, Eq)]
+pub struct QueryId(String);
+
+impl QueryId {
+    fn from_statement(statement: &queries::SelectStatement) -> Self {
+        Self(format!("{:x}", md5::compute(statement.as_str())))
+    }
+
+    pub fn into_inner(self) -> String {
+        self.0
+    }
+}
+
+#[derive(Clone, Debug, Hash, PartialEq, Eq)]
 #[non_exhaustive]
 pub enum TailTarget {
     /// Tail an existing relation (source, table or view).
     Relation { name: SourceName },
     /// Tail the output of a SELECT statement.
-    Select { statement: SelectStatement },
-}
-
-impl TailTarget {
-    pub async fn tail(&self, client: &Client) -> Result<RowStream> {
-        let query = match self {
-            Self::Relation { name } => format!("TAIL {name} WITH (SNAPSHOT = false)"),
-            Self::Select { statement } => format!("TAIL ({statement}) WITH (SNAPSHOT = false)"),
-        };
-        let params: &[&str] = &[];
-        Ok(client.query_raw(&query, params).await?)
-    }
-
-    pub async fn select_all(&self, client: &Client) -> Result<Vec<Row>> {
-        Ok(match self {
-            Self::Relation { name } => {
-                client
-                    .query(&format!("SELECT * FROM {}", name), &[])
-                    .await?
-            }
-            Self::Select { statement } => client.query(&statement.0, &[]).await?,
-        })
-    }
+    Select { query_id: QueryId },
 }
 
 impl PathDisplay for TailTarget {
@@ -104,20 +89,31 @@ impl PathDisplay for TailTarget {
                 f.write_str("relation/")?;
                 name.fmt_path(f)?;
             }
-            Self::Select { statement } => {
-                write!(f, "select/{}", base64::encode(statement.0.as_bytes()))?;
+            Self::Select { query_id } => {
+                write!(f, "select/{}", &query_id.0)?;
             }
         }
         Ok(())
     }
 }
 
-#[derive(Clone, Debug, Deserialize, PartialEq, Eq)]
-#[serde(tag = "path")]
+impl From<queries::TailTarget> for TailTarget {
+    fn from(other: queries::TailTarget) -> Self {
+        match other {
+            queries::TailTarget::Relation { name } => Self::Relation {
+                name: SourceName(name),
+            },
+            queries::TailTarget::Select { statement } => Self::Select {
+                query_id: QueryId::from_statement(&statement),
+            },
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum Path {
     /// Tail the output of a relation.
-    #[serde(rename = "tail")]
     Tail(TailTarget),
 }
 
@@ -128,17 +124,6 @@ impl PathDisplay for Path {
             Self::Tail(target) => target.fmt_path(f)?,
         };
         Ok(())
-    }
-}
-
-impl fmt::Display for Path {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Tail(TailTarget::Relation { name }) => write!(f, "tail/relation/{}", name),
-            Self::Tail(TailTarget::Select { statement }) => {
-                write!(f, "tail/select/{}", statement)
-            }
-        }
     }
 }
 
@@ -153,17 +138,9 @@ impl FromStr for Path {
             (Some("tail"), Some("relation"), Some(name)) => Ok(Self::Tail(TailTarget::Relation {
                 name: name.parse()?,
             })),
-            (Some("tail"), Some("select"), Some(query_base64)) => {
-                Ok(Self::Tail(TailTarget::Select {
-                    statement: SelectStatement(
-                        String::from_utf8(
-                            base64::decode(&query_base64)
-                                .map_err(|e| Error::InvalidTailTarget(e.to_string()))?,
-                        )
-                        .map_err(|e| Error::InvalidTailTarget(e.to_string()))?,
-                    ),
-                }))
-            }
+            (Some("tail"), Some("select"), Some(query_id)) => Ok(Self::Tail(TailTarget::Select {
+                query_id: QueryId(query_id.to_string()),
+            })),
             (Some("tail"), _, _) => Err(Error::MissingTailTarget),
             _ => Err(Error::UnknownPath(s.to_string())),
         }

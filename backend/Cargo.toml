@@ -16,6 +16,7 @@ futures-util = "0.3.21"
 # grafana-plugin-sdk = "0.1.0"
 grafana-plugin-sdk = { git = "https://github.com/grafana/grafana-plugin-sdk-rust", branch = "more-field-type-impls" }
 http = "0.2.6"
+md5 = "0.7.0"
 rand = "0.8.5"
 rust_decimal = { version = "1.22.0", features = ["db-tokio-postgres"] }
 serde = { version = "1.0.136", features = ["derive"] }

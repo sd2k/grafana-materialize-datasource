@@ -1,4 +1,4 @@
-use grafana_plugin_sdk::{backend, data};
+use grafana_plugin_sdk::{backend, data, live};
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -23,6 +23,9 @@ pub enum Error {
 
     #[error("Connection error: {0}")]
     Connection(#[from] tokio_postgres::Error),
+
+    #[error("Error creating channel: {0}")]
+    CreatingChannel(live::ChannelError),
 
     #[error("Error converting data: {0}")]
     ConvertTo(#[from] backend::ConvertToError),
