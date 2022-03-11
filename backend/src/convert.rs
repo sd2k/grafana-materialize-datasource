@@ -46,7 +46,11 @@ pub fn rows_to_frame(rows: Vec<Row>) -> data::Frame {
         frame.add_field(iter::repeat(now).take(rows.len()).into_field(MZ_TIMESTAMP))
     }
     if !has_mz_diff {
-        frame.add_field(iter::repeat::<Option<i64>>(None).take(rows.len()).into_opt_field(MZ_DIFF))
+        frame.add_field(
+            iter::repeat::<Option<i64>>(None)
+                .take(rows.len())
+                .into_opt_field(MZ_DIFF),
+        )
     }
 
     for (i, column) in rows[0].columns().iter().enumerate() {
@@ -73,6 +77,10 @@ pub fn rows_to_frame(rows: Vec<Row>) -> data::Frame {
                     .iter()
                     .map(|row| row.get::<_, serde_json::Value>(i).to_string())
                     .into_field(name),
+                &Type::NUMERIC => rows
+                    .iter()
+                    .map(|row| row.get::<_, Decimal>(i).to_i64())
+                    .into_opt_field(name),
                 &Type::DATE => load_field::<NaiveDate>(&rows, i, name),
                 &Type::TIMESTAMP => load_field::<NaiveDateTime>(&rows, i, name),
                 &Type::TIMESTAMPTZ => load_field::<DateTime<Utc>>(&rows, i, name),
