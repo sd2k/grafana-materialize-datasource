@@ -89,12 +89,12 @@ You can run a Grafana instance either by cloning the Grafana repository, or runn
 3. Run the following to compile the plugin in release mode for each target:
 
    ```bash
-   CARGO_TARGET_ARMV7_UNKNOWN_LINUX_MUSLEABIHF_LINKER=armv7-unknown-linux-musleabihf-ld cargo build --release --target armv7-unknown-linux-musleabihf
-   cargo build --release --target aarch64-apple-darwin
-   cargo build --release --target x86_64-apple-darwin
-   CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-unknown-linux-gnu-gcc cargo build --release --target aarch64-unknown-linux-gnu
-   CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER=aarch64-unknown-linux-musl-gcc cargo build --release --target aarch64-unknown-linux-musl
-   CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER=x86_64-w64-mingw32-gcc cargo build --release --target x86_64-pc-windows-gnu
+   CARGO_TARGET_ARMV7_UNKNOWN_LINUX_MUSLEABIHF_LINKER=armv7-unknown-linux-musleabihf-ld cargo build --release --target armv7-unknown-linux-musleabihf --bin grafana-materialize-datasource
+   cargo build --release --target aarch64-apple-darwin --bin grafana-materialize-datasource
+   cargo build --release --target x86_64-apple-darwin --bin grafana-materialize-datasource
+   CARGO_TARGET_X86_64_UNKNOWN_LINUX_MUSL_LINKER=x86_64-unknown-linux-musl-gcc cargo build --release --target x86_64-unknown-linux-musl --bin grafana-materialize-datasource
+   CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER=aarch64-unknown-linux-musl-gcc cargo build --release --target aarch64-unknown-linux-musl --bin grafana-materialize-datasource
+   CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER=x86_64-w64-mingw32-gcc cargo build --release --target x86_64-pc-windows-gnu --bin grafana-materialize-datasource
    ```
 
 [`cargo-xtask`]: https://github.com/matklad/cargo-xtask
