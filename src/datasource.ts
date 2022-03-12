@@ -11,7 +11,7 @@ export class DataSource extends DataSourceWithBackend<MaterializeQuery, DataSour
   //   return query;
   // }
 
-  streamOptionsProvider = (request: DataQueryRequest<MaterializeQuery>): Partial<StreamingFrameOptions> => {
+  streamOptionsProvider = (_request: DataQueryRequest<MaterializeQuery>): Partial<StreamingFrameOptions> => {
     // const shouldOverwrite = request.targets.some((target) => target.path === ConsolePathName.TaskHistogram);
     return {
       maxLength: 10000 /*, action: shouldOverwrite ? StreamingFrameAction.Replace : StreamingFrameAction.Append */,
@@ -20,8 +20,8 @@ export class DataSource extends DataSourceWithBackend<MaterializeQuery, DataSour
 
   async metricFindQuery(query: VariableQuery): Promise<MetricFindValue[]> {
     if (query.path === VariableQueryPathName.Relations) {
-      const url = '/relations';
-      let tasks = await this.getResource(url);
+      const url = 'relations';
+      const tasks = await this.getResource(url);
       return tasks.map((text: string) => ({ text }));
     }
     return [];
