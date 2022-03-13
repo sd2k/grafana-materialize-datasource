@@ -5,6 +5,6 @@ use grafana_materialize_datasource::MaterializePlugin;
     init_subscriber = true,
     shutdown_handler = "0.0.0.0:10001"
 )]
-async fn plugin() -> ConsolePlugin {
+async fn plugin() -> MaterializePlugin {
     MaterializePlugin::default()
 }

@@ -1,4 +1,4 @@
-/// The `grafana_plugin_sdk::backend::StreamService` implementation for the Console plugin.
+/// The `grafana_plugin_sdk::backend::StreamService` implementation for the Materialize plugin.
 use futures_util::TryStreamExt;
 use grafana_plugin_sdk::{backend, data};
 use tracing::debug;
