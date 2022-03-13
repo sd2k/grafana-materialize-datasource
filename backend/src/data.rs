@@ -96,7 +96,11 @@ impl backend::DataService for MaterializePlugin {
                     let ref_id = x.ref_id.clone();
                     let uid = datasource_settings.uid.clone();
                     async {
-                        query_data_single(client.unwrap(), uid, x, queries)
+                        let client = client.map_err(|source| QueryError {
+                            ref_id: ref_id.clone(),
+                            source,
+                        })?;
+                        query_data_single(client, uid, x, queries)
                             .await
                             .map_err(|source| QueryError { ref_id, source })
                     }
