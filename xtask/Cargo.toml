@@ -4,3 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+anyhow = "1.0.56"
+phf = { version = "0.10.1", features = ["macros"] }
+serde_json = "1.0.79"
+
+[features]
