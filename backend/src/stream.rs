@@ -25,7 +25,6 @@ impl backend::StreamService for MaterializePlugin {
         &self,
         request: backend::SubscribeStreamRequest,
     ) -> Result<backend::SubscribeStreamResponse> {
-        dbg!(&request);
         let path = request.path()?;
         let target = self.target(path).await?;
         let datasource_settings = request
