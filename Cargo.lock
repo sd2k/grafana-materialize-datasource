@@ -408,8 +408,9 @@ dependencies = [
 
 [[package]]
 name = "grafana-plugin-sdk"
-version = "0.1.0"
-source = "git+https://github.com/grafana/grafana-plugin-sdk-rust?branch=main#07dc633247ef68e2370c0456ecd437d4524bd5c0"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "58feee8a90013f7275c7fc63fcf2761ebaf9148c356ab03609f33fccd7551fc6"
 dependencies = [
  "arrow2",
  "chrono",
@@ -440,8 +441,9 @@ dependencies = [
 
 [[package]]
 name = "grafana-plugin-sdk-macros"
-version = "0.1.0"
-source = "git+https://github.com/grafana/grafana-plugin-sdk-rust?branch=main#07dc633247ef68e2370c0456ecd437d4524bd5c0"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "58a8f94cc30cf626c42f8636efdadc5bcc93a5dcb51a0a7123c9cd0f17df2a3d"
 dependencies = [
  "proc-macro2",
  "quote",
