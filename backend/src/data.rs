@@ -4,15 +4,15 @@ use futures_util::{
     stream::{FuturesOrdered, FuturesUnordered},
     StreamExt,
 };
-use serde::Deserialize;
 
 use grafana_plugin_sdk::backend;
 use tokio::sync::RwLock;
 use tokio_postgres::Client;
 
 use crate::{
-    path::{self, PathDisplay},
-    queries, request, rows_to_frame, Error, MaterializePlugin,
+    path::{self, PathDisplay, QueryId},
+    queries::{Query, SelectStatement, TailTarget},
+    rows_to_frame, Error, MaterializePlugin,
 };
 
 #[derive(Debug, thiserror::Error)]
@@ -28,36 +28,26 @@ impl backend::DataQueryError for QueryError {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
-struct MaterializeQueryDataRequest {
-    #[serde(flatten)]
-    target: request::TailTarget,
-}
-
 async fn query_data_single(
     client: Client,
     uid: String,
     query: backend::DataQuery,
-    queries: Arc<RwLock<HashMap<path::QueryId, queries::SelectStatement>>>,
+    queries: Arc<RwLock<HashMap<path::QueryId, SelectStatement>>>,
 ) -> Result<backend::DataResponse, Error> {
-    let target: queries::TailTarget = serde_json::from_value(query.json)
-        .map(|req: MaterializeQueryDataRequest| req.target)
-        .map_err(|e| Error::InvalidTailTarget(e.to_string()))?
-        .into();
+    let q: Query = serde_json::from_value(query.json).map_err(Error::InvalidQuery)?;
+    let target = q.as_tail()?;
     let rows = target.select_all(&client).await?;
     let mut frame = rows_to_frame(rows);
 
-    let path = path::Path::Tail(target.clone().into());
-    if let queries::TailTarget::Select { statement } = target {
-        // Eww, this should definitely be cleaned up.
-        if let path::Path::Tail(path::TailTarget::Select { query_id }) = &path {
-            queries.write().await.insert(query_id.clone(), statement);
-        }
+    if let TailTarget::Select { statement } = target {
+        let query_id = QueryId::from_statement(statement);
+        queries.write().await.insert(query_id, statement.clone());
     }
 
+    let path = q.to_path();
     // Set the channel of the frame, indicating to Grafana that it should switch to
     // streaming.
-    let channel = format!("ds/{}/{}", uid, path.to_path())
+    let channel = format!("ds/{}/{}", uid, path)
         .parse()
         .map_err(Error::CreatingChannel)?;
     frame.set_channel(channel);
