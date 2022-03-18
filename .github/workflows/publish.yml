@@ -1,6 +1,9 @@
 name: Publish 
 
-on: [push]
+on:
+  push:
+    branches:
+    - main
 
 jobs:
   linux_amd64:
@@ -131,7 +134,7 @@ jobs:
 
   collect:
     name: Display results
-    needs: [darwin_amd64, linux_amd64, linux_arm, linux_arm64, windows_amd64]
+    needs: [darwin_amd64, darwin_arm64, linux_amd64, linux_arm, linux_arm64, windows_amd64]
     runs-on: ubuntu-latest
     steps:
       - name: Download
