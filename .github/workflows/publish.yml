@@ -79,9 +79,28 @@ jobs:
           name: x86_64-pc-windows-gnu
           path: target/x86_64-pc-windows-gnu/release/grafana-materialize-datasource
 
+  darwin_amd64:
+    name: x86_64-apple-darwin
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - uses: actions-rs/cargo@v1
+        with:
+          command: install
+          args: cross
+      - run: cross build --target x86_64-apple-darwin --release
+      - name: Upload
+        uses: actions/upload-artifact@v3
+        with:
+          name: x86_64-apple-darwin
+          path: target/x86_64-apple-darwin/release/grafana-materialize-datasource
+
   collect:
     name: Display results
-    needs: [linux_amd64, linux_arm, linux_arm64, windows_amd64]
+    needs: [darwin_amd64, linux_amd64, linux_arm, linux_arm64, windows_amd64]
     runs-on: ubuntu-latest
     steps:
       - name: Download
