@@ -3,7 +3,7 @@ name: Publish
 on: [push]
 
 jobs:
-  job_1:
+  linux_amd64:
     name: x86_64-unknown-linux-musl
     runs-on: ubuntu-latest
     steps:
@@ -22,7 +22,7 @@ jobs:
           name: x86_64-unknown-linux-musl 
           path: target/x86_64-unknown-linux-musl/release/grafana-materialize-datasource
 
-  job_2:
+  linux_arm64:
     name: aarch64-unknown-linux-musl
     runs-on: ubuntu-latest
     steps:
@@ -41,16 +41,51 @@ jobs:
           name: aarch64-unknown-linux-musl 
           path: target/aarch64-unknown-linux-musl/release/grafana-materialize-datasource
 
-  job_3:
+  linux_arm:
+    name: armv7-unknown-linux-musleabihf 
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - uses: actions-rs/cargo@v1
+        with:
+          command: install
+          args: cross
+      - run: cross build --target armv7-unknown-linux-musleabihf --release
+      - name: Upload 
+        uses: actions/upload-artifact@v3
+        with:
+          name: armv7-unknown-linux-musleabihf 
+          path: target/armv7-unknown-linux-musleabihf/release/grafana-materialize-datasource
+
+  windows_amd64:
+    name: x86_64-pc-windows-gnu 
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - uses: actions-rs/cargo@v1
+        with:
+          command: install
+          args: cross
+      - run: cross build --target x86_64-pc-windows-gnu --release
+      - name: Upload 
+        uses: actions/upload-artifact@v3
+        with:
+          name: x86_64-pc-windows-gnu
+          path: target/x86_64-pc-windows-gnu/release/grafana-materialize-datasource
+
+  collect:
     name: Display results
-    needs: [job_1, job_2]
+    needs: [linux_amd64, linux_arm, linux_arm64, windows_amd64]
     runs-on: ubuntu-latest
     steps:
       - name: Download
         uses: actions/download-artifact@v3
         with:
-          name: aarch64-unknown-linux-musl 
-      - name: Download
-        uses: actions/download-artifact@v3
-        with:
-          name: x86_64-unknown-linux-musl 
+          path: artifacts
+      - run: ls artifacts
