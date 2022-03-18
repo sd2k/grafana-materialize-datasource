@@ -16,6 +16,7 @@ use crate::{path, Error, Result, SqlQueries};
 pub struct SourceName(String);
 
 impl SourceName {
+    /// Get the inner source name as a `&str`.
     pub fn as_str(&self) -> &str {
         &self.0
     }
@@ -127,7 +128,15 @@ pub enum Query {
 }
 
 impl Query {
-    pub async fn from_path(p: &Path, queries: SqlQueries) -> Result<Self> {
+    /// Try to convert a [`Path`] to a [`Query`], using the provided [`SqlQueries`]
+    /// to lookup a query ID if the path contains one.
+    ///
+    /// # Errors
+    ///
+    /// This will fail if:
+    /// - the path does not match a known format (`/tail/relation/<name>` or `/tail/select/<query id>`)
+    /// - the query ID in the 'select' form is not present in `queries`
+    pub async fn try_from_path(p: &Path, queries: SqlQueries) -> Result<Self> {
         let mut iter = p.as_str().splitn(3, '/');
         match (iter.next(), iter.next(), iter.next()) {
             (Some("tail"), Some("relation"), Some(name)) => Ok(Self::Tail(TailTarget::Relation {
@@ -149,7 +158,11 @@ impl Query {
         }
     }
 
-    pub fn as_tail(&self) -> Result<&TailTarget> {
+    /// Attempt to access this query as `&TailTarget`, or return an `Err` if it doesn't match.
+    ///
+    /// This is just a helper function to avoid having to match all over the place, since
+    /// we know the query can't take any other form for now.
+    pub(crate) fn as_tail(&self) -> Result<&TailTarget> {
         // If this enum changes in future we'll probably want to early return
         // hence using `match` instead of `if let`.
         match self {
@@ -207,7 +220,7 @@ mod test {
             "SELECT * FROM my_table".parse().unwrap(),
         )])));
         assert_eq!(
-            Query::from_path(
+            Query::try_from_path(
                 &Path::new("tail/relation/some_table".to_string()).unwrap(),
                 Arc::clone(&queries)
             )
@@ -218,7 +231,7 @@ mod test {
             })
         );
         assert_eq!(
-            Query::from_path(
+            Query::try_from_path(
                 &Path::new("tail/select/9ebfce3b05a248842876e8ed1706a451".to_string()).unwrap(),
                 Arc::clone(&queries)
             )

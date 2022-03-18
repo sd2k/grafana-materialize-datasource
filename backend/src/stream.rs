@@ -25,7 +25,7 @@ impl backend::StreamService for MaterializePlugin {
         &self,
         request: backend::SubscribeStreamRequest,
     ) -> Result<backend::SubscribeStreamResponse> {
-        let query = Query::from_path(&request.path, self.sql_queries.clone()).await?;
+        let query = Query::try_from_path(&request.path, self.sql_queries.clone()).await?;
         let target = query.as_tail()?;
         let datasource_settings = request
             .plugin_context
@@ -50,7 +50,7 @@ impl backend::StreamService for MaterializePlugin {
     /// is multiplexed to all clients by Grafana's backend. This is in contrast to the
     /// `subscribe_stream` method which is called for every client that wishes to connect.
     async fn run_stream(&self, request: backend::RunStreamRequest) -> Result<Self::Stream> {
-        let query = Query::from_path(&request.path, self.sql_queries.clone()).await?;
+        let query = Query::try_from_path(&request.path, self.sql_queries.clone()).await?;
         let target = query.as_tail()?;
         let datasource_settings = request
             .plugin_context

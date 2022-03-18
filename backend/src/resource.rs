@@ -1,3 +1,9 @@
+//! The 'resource' service, which responds to arbitrary HTTP requests from the plugin.
+//!
+//! In practice, the only path handled is /relations, which returns a JSON array containing
+//! the list of relations present in the Materialize database, useful for populating a dropdown
+//! of potential `TAIL` options.
+
 use bytes::Bytes;
 use futures_util::stream;
 use grafana_plugin_sdk::backend;

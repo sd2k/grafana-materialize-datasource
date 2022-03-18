@@ -17,14 +17,20 @@ use tokio_postgres::{Client, Config, NoTls};
 use convert::rows_to_frame;
 use error::{Error, Result};
 
+/// An atomically reference counted, shareable async hashmap from query ID to select statement.
 pub type SqlQueries = Arc<RwLock<HashMap<path::QueryId, queries::SelectStatement>>>;
 
 #[derive(Clone, Debug, Default)]
 pub struct MaterializePlugin {
+    /// SQL queries that have previously been served by this plugin process.
     sql_queries: SqlQueries,
 }
 
 impl MaterializePlugin {
+    /// Get a database client using the given datasource settings.
+    ///
+    /// The `tokio_postgres::Connection` is spawned into a new task;
+    /// that task will be dropped automatically when the returned `Client` is dropped.
     async fn get_client(
         &self,
         datasource_settings: &backend::DataSourceInstanceSettings,
@@ -47,6 +53,10 @@ impl MaterializePlugin {
     }
 }
 
+/// The settings for a Materialize datasource.
+///
+/// This should match the `DataSourceOptions` interface in the TypeScript
+/// package.
 #[derive(Debug, Deserialize)]
 struct MaterializeDatasourceSettings {
     host: String,

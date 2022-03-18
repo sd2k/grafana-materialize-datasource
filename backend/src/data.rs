@@ -15,6 +15,7 @@ use crate::{
     rows_to_frame, Error, MaterializePlugin,
 };
 
+/// An error returned when querying for data.
 #[derive(Debug, thiserror::Error)]
 #[error("Error querying backend for {}: {}", .ref_id, .source)]
 pub struct QueryError {
@@ -28,6 +29,11 @@ impl backend::DataQueryError for QueryError {
     }
 }
 
+/// Query for data for a single `DataQuery` in a request.
+///
+// Unfortunately this has to take all of its arguments by value until we have
+// GATs, since the `DataService::Stream` associated type can't contain references.
+// Ideally we'd just borrow the query/uid etc but it's really not a big deal.
 async fn query_data_single(
     client: Client,
     uid: String,
