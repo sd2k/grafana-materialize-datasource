@@ -39,7 +39,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: aarch64-unknown-linux-musl 
-          path: target/arch64-unknown-linux-musl/release/grafana-materialize-datasource
+          path: target/aarch64-unknown-linux-musl/release/grafana-materialize-datasource
 
   job_3:
     name: Display results
