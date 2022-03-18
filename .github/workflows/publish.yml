@@ -89,9 +89,8 @@ jobs:
           toolchain: stable
       - uses: actions-rs/cargo@v1
         with:
-          command: install
-          args: cross
-      - run: cross build --target x86_64-apple-darwin --release
+          command: build 
+          args:  --target x86_64-apple-darwin --release
       - name: Upload
         uses: actions/upload-artifact@v3
         with:
