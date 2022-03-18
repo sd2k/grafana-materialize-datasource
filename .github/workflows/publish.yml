@@ -1,0 +1,144 @@
+name: Publish 
+
+on:
+  push:
+    branches:
+    - main
+
+jobs:
+  linux_amd64:
+    name: x86_64-unknown-linux-musl
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: x86_64-unknown-linux-musl
+          override: true
+      - uses: actions-rs/cargo@v1
+        with:
+          use-cross: true
+          command: build 
+          args: --target x86_64-unknown-linux-musl --release
+      - name: Upload 
+        uses: actions/upload-artifact@v3
+        with:
+          name: x86_64-unknown-linux-musl 
+          path: target/x86_64-unknown-linux-musl/release/grafana-materialize-datasource
+
+  linux_arm64:
+    name: aarch64-unknown-linux-musl
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: aarch64-unknown-linux-musl
+          override: true
+      - uses: actions-rs/cargo@v1
+        with:
+          use-cross: true
+          command: install
+          args: cross
+      - run: cross build --target aarch64-unknown-linux-musl --release
+      - name: Upload 
+        uses: actions/upload-artifact@v3
+        with:
+          name: aarch64-unknown-linux-musl 
+          path: target/aarch64-unknown-linux-musl/release/grafana-materialize-datasource
+
+  linux_arm:
+    name: armv7-unknown-linux-musleabihf 
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: armv7-unknown-linux-musleabihf
+          override: true
+      - uses: actions-rs/cargo@v1
+        with:
+          use-cross: true
+          command: install
+          args: cross
+      - run: cross build --target armv7-unknown-linux-musleabihf --release
+      - name: Upload 
+        uses: actions/upload-artifact@v3
+        with:
+          name: armv7-unknown-linux-musleabihf 
+          path: target/armv7-unknown-linux-musleabihf/release/grafana-materialize-datasource
+
+  windows_amd64:
+    name: x86_64-pc-windows-gnu 
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: x86_64-pc-windows-gnu
+          override: true
+      - uses: actions-rs/cargo@v1
+        with:
+          use-cross: true
+          command: build 
+          args: --target x86_64-pc-windows-gnu --release
+      - name: Upload 
+        uses: actions/upload-artifact@v3
+        with:
+          name: x86_64-pc-windows-gnu
+          path: target/x86_64-pc-windows-gnu/release/grafana-materialize-datasource.exe
+
+  darwin_amd64:
+    name: x86_64-apple-darwin
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: x86_64-apple-darwin
+          override: true
+      - uses: actions-rs/cargo@v1
+        with:
+          command: build 
+          args:  --target x86_64-apple-darwin --release
+      - name: Upload
+        uses: actions/upload-artifact@v3
+        with:
+          name: x86_64-apple-darwin
+          path: target/x86_64-apple-darwin/release/grafana-materialize-datasource
+
+  darwin_arm64:
+    name: aarch64-apple-darwin
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: aarch64-apple-darwin
+          override: true
+      - uses: actions-rs/cargo@v1
+        with:
+          command: build 
+          args:  --target aarch64-apple-darwin --release
+      - name: Upload
+        uses: actions/upload-artifact@v3
+        with:
+          name: aarch64-apple-darwin
+          path: target/aarch64-apple-darwin/release/grafana-materialize-datasource
+
+  collect:
+    name: Display results
+    needs: [darwin_amd64, darwin_arm64, linux_amd64, linux_arm, linux_arm64, windows_amd64]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download
+        uses: actions/download-artifact@v3
+        with:
+          path: artifacts
+      - run: ls -R artifacts
