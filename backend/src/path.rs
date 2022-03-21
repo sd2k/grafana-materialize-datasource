@@ -1,9 +1,9 @@
-use std::{
-    fmt::{self, Write},
-    str::FromStr,
-};
+//! Describes how targets should be represented in 'paths'
+//! of Grafana Live channels.
 
-use crate::{queries, Error, Result};
+use std::fmt::{self, Write};
+
+use crate::queries::{Query, SelectStatement, SourceName, TailTarget};
 
 /// Trait describing how a type should be serialized to a [`Channel`]'s path.
 ///
@@ -12,7 +12,11 @@ use crate::{queries, Error, Result};
 ///
 /// [`Channel`]: grafana_plugin_sdk::live::Channel
 pub trait PathDisplay {
+    /// Format `self` into `f`, similarly to [`std::fmt::Display::fmt`], but
+    /// ensuring the formatted string is path-safe.
     fn fmt_path(&self, f: &mut String) -> fmt::Result;
+
+    /// Create a new string containing the path-representation of `self`.
     fn to_path(&self) -> String {
         let mut s = String::new();
         self.fmt_path(&mut s)
@@ -21,65 +25,56 @@ pub trait PathDisplay {
     }
 }
 
-#[derive(Clone, Debug, Hash, PartialEq, Eq)]
-pub struct SourceName(queries::SourceName);
-
-impl Into<queries::SourceName> for SourceName {
-    fn into(self) -> queries::SourceName {
-        self.0
-    }
-}
-
 impl PathDisplay for SourceName {
     fn fmt_path(&self, f: &mut String) -> fmt::Result {
-        f.write_str(self.0.as_str())
+        f.write_str(self.as_str())
     }
 }
 
-impl fmt::Display for SourceName {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.0.fmt(f)
+impl PathDisplay for SelectStatement {
+    fn fmt_path(&self, f: &mut String) -> fmt::Result {
+        f.write_str(QueryId::from_statement(self).as_str())
     }
 }
 
-impl FromStr for SourceName {
-    type Err = Error;
-
-    fn from_str(s: &str) -> Result<Self> {
-        Ok(Self(s.parse()?))
-    }
-}
-
-#[derive(Clone, Debug, Hash, PartialEq, Eq)]
-// TODO: actually do some validation here.
-pub struct SelectStatement(queries::SelectStatement);
-
-impl fmt::Display for SelectStatement {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.0.fmt(f)
-    }
-}
-
+/// The ID of a query statement.
+///
+/// This is used as the key in a map from query ID -> statement
+/// and is safe to be included in a [`Path`], providing clients
+/// with a way of requesting previous statements simply by query
+/// ID.
+///
+/// This is required when we upgrade from a data query to a stream
+/// query and the only thing we can use to link the two is a [`Channel`].
+///
+/// Internally, this is just an md5 hash of the original SQL query.
 #[derive(Clone, Debug, Hash, PartialEq, Eq)]
 pub struct QueryId(String);
 
 impl QueryId {
-    fn from_statement(statement: &queries::SelectStatement) -> Self {
+    /// Create a `QueryId` from a string containing a pre-computed hash.
+    pub fn new(s: String) -> QueryId {
+        Self(s)
+    }
+
+    /// Create a `QueryId` from a SQL statement.
+    pub fn from_statement(statement: &SelectStatement) -> Self {
         Self(format!("{:x}", md5::compute(statement.as_str())))
     }
 
+    /// Access the inner `QueryId` as a string.
+    ///
+    /// Note that this gets the md5 hash, not the original SQL query.
     pub fn into_inner(self) -> String {
         self.0
     }
-}
 
-#[derive(Clone, Debug, Hash, PartialEq, Eq)]
-#[non_exhaustive]
-pub enum TailTarget {
-    /// Tail an existing relation (source, table or view).
-    Relation { name: SourceName },
-    /// Tail the output of a SELECT statement.
-    Select { query_id: QueryId },
+    /// Access the inner `QueryId` as a `&str`.
+    ///
+    /// Note that this gets the md5 hash, not the original SQL query.
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
 }
 
 impl PathDisplay for TailTarget {
@@ -89,7 +84,8 @@ impl PathDisplay for TailTarget {
                 f.write_str("relation/")?;
                 name.fmt_path(f)?;
             }
-            Self::Select { query_id } => {
+            Self::Select { statement } => {
+                let query_id = QueryId::from_statement(statement);
                 write!(f, "select/{}", &query_id.0)?;
             }
         }
@@ -97,53 +93,13 @@ impl PathDisplay for TailTarget {
     }
 }
 
-impl From<queries::TailTarget> for TailTarget {
-    fn from(other: queries::TailTarget) -> Self {
-        match other {
-            queries::TailTarget::Relation { name } => Self::Relation {
-                name: SourceName(name),
-            },
-            queries::TailTarget::Select { statement } => Self::Select {
-                query_id: QueryId::from_statement(&statement),
-            },
-        }
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
-#[non_exhaustive]
-pub enum Path {
-    /// Tail the output of a relation.
-    Tail(TailTarget),
-}
-
-impl PathDisplay for Path {
+impl PathDisplay for Query {
     fn fmt_path(&self, f: &mut String) -> fmt::Result {
         f.write_str("tail/")?;
         match self {
             Self::Tail(target) => target.fmt_path(f)?,
         };
         Ok(())
-    }
-}
-
-// Note that this differs from the `Deserialize` impl in that it assumes the SQL statement
-// is base64 encoded - this should be tidied up at some point.
-impl FromStr for Path {
-    type Err = Error;
-
-    fn from_str(s: &str) -> Result<Self> {
-        let mut iter = s.splitn(3, '/');
-        match (iter.next(), iter.next(), iter.next()) {
-            (Some("tail"), Some("relation"), Some(name)) => Ok(Self::Tail(TailTarget::Relation {
-                name: name.parse()?,
-            })),
-            (Some("tail"), Some("select"), Some(query_id)) => Ok(Self::Tail(TailTarget::Select {
-                query_id: QueryId(query_id.to_string()),
-            })),
-            (Some("tail"), _, _) => Err(Error::MissingTailTarget),
-            _ => Err(Error::UnknownPath(s.to_string())),
-        }
     }
 }
 
@@ -154,36 +110,18 @@ mod tests {
     #[test]
     fn path_display() {
         assert_eq!(
-            Path::Tail(TailTarget::Relation {
-                name: SourceName("some_table".parse().unwrap())
+            Query::Tail(TailTarget::Relation {
+                name: "some_table".parse().unwrap()
             })
             .to_path(),
             "tail/relation/some_table"
         );
         assert_eq!(
-            Path::Tail(TailTarget::Select {
-                query_id: QueryId::from_statement(&"SELECT * FROM my_table".parse().unwrap())
+            Query::Tail(TailTarget::Select {
+                statement: "SELECT * FROM my_table".parse().unwrap()
             })
             .to_path(),
             "tail/select/9ebfce3b05a248842876e8ed1706a451"
-        );
-    }
-
-    #[test]
-    fn path_from_str() {
-        assert_eq!(
-            "tail/relation/some_table".parse::<Path>().unwrap(),
-            Path::Tail(TailTarget::Relation {
-                name: SourceName("some_table".parse().unwrap())
-            })
-        );
-        assert_eq!(
-            "tail/select/9ebfce3b05a248842876e8ed1706a451"
-                .parse::<Path>()
-                .unwrap(),
-            Path::Tail(TailTarget::Select {
-                query_id: QueryId::from_statement(&"SELECT * FROM my_table".parse().unwrap())
-            })
         );
     }
 }

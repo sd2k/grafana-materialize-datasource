@@ -5,6 +5,9 @@ pub enum Error {
     #[error("stream already running")]
     StreamAlreadyRunning,
 
+    #[error("invalid query")]
+    InvalidQuery(serde_json::Error),
+
     #[error("missing tail target")]
     MissingTailTarget,
     #[error("invalid tail target: {0}")]

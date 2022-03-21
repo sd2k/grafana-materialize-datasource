@@ -1,11 +1,9 @@
-// TODO(bsull): clean up the path, queries and request modules - they can probably be combined into one.
 mod convert;
 mod data;
 mod diagnostics;
 mod error;
 mod path;
 mod queries;
-mod request;
 mod resource;
 mod stream;
 
@@ -19,12 +17,20 @@ use tokio_postgres::{Client, Config, NoTls};
 use convert::rows_to_frame;
 use error::{Error, Result};
 
+/// An atomically reference counted, shareable async hashmap from query ID to select statement.
+pub type SqlQueries = Arc<RwLock<HashMap<path::QueryId, queries::SelectStatement>>>;
+
 #[derive(Clone, Debug, Default)]
 pub struct MaterializePlugin {
-    sql_queries: Arc<RwLock<HashMap<path::QueryId, queries::SelectStatement>>>,
+    /// SQL queries that have previously been served by this plugin process.
+    sql_queries: SqlQueries,
 }
 
 impl MaterializePlugin {
+    /// Get a database client using the given datasource settings.
+    ///
+    /// The `tokio_postgres::Connection` is spawned into a new task;
+    /// that task will be dropped automatically when the returned `Client` is dropped.
     async fn get_client(
         &self,
         datasource_settings: &backend::DataSourceInstanceSettings,
@@ -45,24 +51,12 @@ impl MaterializePlugin {
         });
         Ok(client)
     }
-
-    async fn target(&self, path: path::Path) -> Result<queries::TailTarget> {
-        match path {
-            path::Path::Tail(path::TailTarget::Select { query_id }) => self
-                .sql_queries
-                .read()
-                .await
-                .get(&query_id)
-                .cloned()
-                .map(|statement| queries::TailTarget::Select { statement })
-                .ok_or_else(|| Error::InvalidTailTarget(query_id.into_inner())),
-            path::Path::Tail(path::TailTarget::Relation { name }) => {
-                Ok(queries::TailTarget::Relation { name: name.into() })
-            }
-        }
-    }
 }
 
+/// The settings for a Materialize datasource.
+///
+/// This should match the `DataSourceOptions` interface in the TypeScript
+/// package.
 #[derive(Debug, Deserialize)]
 struct MaterializeDatasourceSettings {
     host: String,

@@ -3,7 +3,7 @@ use futures_util::TryStreamExt;
 use grafana_plugin_sdk::{backend, data};
 use tracing::debug;
 
-use crate::{path, rows_to_frame, Error, MaterializePlugin, Result};
+use crate::{queries::Query, rows_to_frame, Error, MaterializePlugin, Result};
 
 /// Convert a Grafana Plugin SDK Frame to some initial data to send to new subscribers.
 fn frame_to_initial_data(frame: data::Frame) -> Result<backend::InitialData> {
@@ -25,8 +25,8 @@ impl backend::StreamService for MaterializePlugin {
         &self,
         request: backend::SubscribeStreamRequest,
     ) -> Result<backend::SubscribeStreamResponse> {
-        let path = request.path()?;
-        let target = self.target(path).await?;
+        let query = Query::try_from_path(&request.path, self.sql_queries.clone()).await?;
+        let target = query.as_tail()?;
         let datasource_settings = request
             .plugin_context
             .datasource_instance_settings
@@ -50,8 +50,8 @@ impl backend::StreamService for MaterializePlugin {
     /// is multiplexed to all clients by Grafana's backend. This is in contrast to the
     /// `subscribe_stream` method which is called for every client that wishes to connect.
     async fn run_stream(&self, request: backend::RunStreamRequest) -> Result<Self::Stream> {
-        let path = request.path()?;
-        let target = self.target(path).await?;
+        let query = Query::try_from_path(&request.path, self.sql_queries.clone()).await?;
+        let target = query.as_tail()?;
         let datasource_settings = request
             .plugin_context
             .datasource_instance_settings
@@ -82,36 +82,3 @@ impl backend::StreamService for MaterializePlugin {
         unimplemented!()
     }
 }
-
-/// Extension trait providing some convenience methods for getting the `path` and `datasource_uid`.
-trait StreamRequestExt {
-    /// The path passed as part of the request, as a `&str`.
-    fn raw_path(&self) -> &str;
-    /// The datasource instance settings passed in the request.
-    fn datasource_instance_settings(&self) -> Option<&backend::DataSourceInstanceSettings>;
-
-    /// The parsed `Path`, or an `Error` if parsing failed.
-    fn path(&self) -> Result<path::Path> {
-        let path = self.raw_path();
-        path.parse()
-            .map_err(|_| Error::UnknownPath(path.to_string()))
-    }
-}
-
-macro_rules! impl_stream_request_ext {
-    ($request: path) => {
-        impl StreamRequestExt for $request {
-            fn raw_path(&self) -> &str {
-                self.path.as_str()
-            }
-
-            fn datasource_instance_settings(&self) -> Option<&backend::DataSourceInstanceSettings> {
-                self.plugin_context.datasource_instance_settings.as_ref()
-            }
-        }
-    };
-}
-
-impl_stream_request_ext!(backend::RunStreamRequest);
-impl_stream_request_ext!(backend::SubscribeStreamRequest);
-impl_stream_request_ext!(backend::PublishStreamRequest);

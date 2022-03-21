@@ -4,6 +4,8 @@ use serde_json::Value;
 use crate::{Error, MaterializePlugin, Result};
 
 impl MaterializePlugin {
+    /// Connect to the database and run a `SELECT 1` query, returning `Ok(())` on
+    /// success or `Err(Error)` if anything goes wrong.
     async fn check_health(&self, request: &backend::CheckHealthRequest) -> Result<()> {
         let datasource_settings = request
             .plugin_context
