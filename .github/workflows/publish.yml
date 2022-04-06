@@ -229,7 +229,7 @@ jobs:
           echo "::set-output name=checksum::$(cat ./${{ steps.metadata.outputs.archive-checksum }} | cut -d' ' -f1)"
 
       - name: Lint plugin
-        uses: grafana/plugin-validator@25d6d84
+        uses: grafana/plugin-validator@25d6d841db3232e7f2bcfa63a47fcf1501692eb5
 
       # - name: Create release
       #   id: create_release
