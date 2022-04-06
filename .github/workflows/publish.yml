@@ -228,16 +228,8 @@ jobs:
           md5sum ${{ steps.metadata.outputs.archive }} > ${{ steps.metadata.outputs.archive-checksum }}
           echo "::set-output name=checksum::$(cat ./${{ steps.metadata.outputs.archive-checksum }} | cut -d' ' -f1)"
 
-      - uses: actions/setup-go@v2
-        with:
-          go-version: '^1.17.3'
       - name: Lint plugin
-        run: |
-          git clone https://github.com/grafana/plugin-validator
-          pushd ./plugin-validator/pkg/cmd/plugincheck
-          go install
-          popd
-          plugincheck ${{ steps.metadata.outputs.archive }}
+        uses: grafana/plugin-validator@25d6d84
 
       # - name: Create release
       #   id: create_release
