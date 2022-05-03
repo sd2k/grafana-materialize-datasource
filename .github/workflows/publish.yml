@@ -230,7 +230,8 @@ jobs:
 
       - name: Lint plugin
         uses: grafana/plugin-validator@f2b009a3b3d82552c94ac89ed525ab9fc5efade8
-        package: ${{ steps.metadata.outputs.archive }}
+        with:
+          package: ${{ steps.metadata.outputs.archive }}
 
       # - name: Create release
       #   id: create_release
