@@ -6,12 +6,12 @@
   "metrics": true,
   "backend": true,
   "streaming": true,
-  "executable": "./gpx_grafana-materialize-datasource",
+  "executable": "./grafana-materialize-datasource",
   "info": {
     "description": "Materialize datasource for Grafana",
     "author": {
       "name": "Ben Sully",
-      "url": ""
+      "url": "https://github.com/sd2k"
     },
     "keywords": [
       "materialize"
