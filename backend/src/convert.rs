@@ -11,7 +11,8 @@ use tokio_postgres::{
 const MZ_TIMESTAMP: &str = "mz_timestamp";
 const MZ_DIFF: &str = "mz_diff";
 
-fn load_field<'a, T>(rows: &'a [Row], column: usize, name: &str) -> data::Field
+/// Load the column with the provided `index` from a slice of `Row`s into a named `Field`.
+fn load_field<'a, T>(rows: &'a [Row], index: usize, name: &str) -> data::Field
 where
     T: FromSql<'a> + data::IntoFieldType,
     <T as data::IntoFieldType>::ElementType: data::FieldType,
@@ -19,7 +20,7 @@ where
         Array + FromIterator<Option<<T as data::IntoFieldType>::ElementType>> + 'static,
 {
     rows.iter()
-        .map(|row| row.get::<_, T>(column))
+        .map(|row| row.get::<_, T>(index))
         .into_field(name)
 }
 
@@ -30,6 +31,13 @@ fn unsupported_type_field(n: usize, type_: &Type, name: &str) -> data::Field {
 }
 
 /// Convert some rows returned from Materialize to a Grafana Plugin SDK Frame.
+///
+/// Note that all of the rows must have the same columns; this function will
+/// likely panic if that is not the case.
+///
+/// If the rows do not return the `MZ_TIMESTAMP` or `MZ_DIFF` columns
+/// they will be added automatically using the current timestamp and `None`
+/// as values respectively.
 pub fn rows_to_frame(rows: Vec<Row>) -> data::Frame {
     let mut frame = data::Frame::new("tail");
     if rows.is_empty() {
