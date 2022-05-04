@@ -18,7 +18,7 @@ services:
       RUST_LOG: grafana_plugin_sdk=debug,grafana_materialize_datasource=debug,info
     volumes:
       - "./provisioning:/etc/grafana/provisioning"
-      - ".:/var/lib/grafana/plugins/grafana-materialize-datasource"
+      - ".:/var/lib/grafana/plugins/bsull-materialize-datasource"
 
   frontend:
     image: node:14

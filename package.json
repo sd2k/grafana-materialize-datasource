@@ -1,5 +1,5 @@
 {
-  "name": "grafana-materialize-datasource",
+  "name": "bsull-materialize-datasource",
   "version": "0.1.0",
   "description": "Materialize datasource for Grafana",
   "scripts": {
