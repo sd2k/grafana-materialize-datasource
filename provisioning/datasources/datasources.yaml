@@ -6,7 +6,7 @@ deleteDatasources:
 
 datasources:
   - name: Materialize - Docker
-    type: grafana-materialize-datasource
+    type: bsull-materialize-datasource
     uid: materializedocker
     access: proxy
     jsonData:
