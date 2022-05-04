@@ -20,8 +20,8 @@
       "materialize"
     ],
     "logos": {
-      "small": "./img/logo.svg",
-      "large": "./img/logo.svg"
+      "small": "img/logo.svg",
+      "large": "img/logo.svg"
     },
     "links": [
       {
@@ -36,15 +36,15 @@
     "screenshots": [
       {
         "name": "Getting Started",
-        "path": "./img/getting-started.png"
+        "path": "img/getting-started.png"
       },
       {
         "name": "Source selector",
-        "path": "./img/query.png"
+        "path": "img/query.png"
       },
       {
         "name": "Suggested transforms",
-        "path": "./img/transforms.png"
+        "path": "img/transforms.png"
       }
     ],
     "version": "%VERSION%",
