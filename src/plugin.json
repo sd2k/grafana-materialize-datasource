@@ -37,5 +37,11 @@
     "version": "%VERSION%",
     "updated": "%TODAY%"
   },
-  "includes": []
+  "includes": [
+    {
+      "type": "dashboard",
+      "name": "Materialize - Getting Started",
+      "path": "./dashboards/getting-started.json"
+    }
+  ]
 }
