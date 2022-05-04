@@ -4,7 +4,7 @@ This is a WIP Grafana data source which can connect to the [Materialize][] strea
 
 ## Screenshots
 
-https://raw.githubusercontent.com/sd2k/grafana-materialize-datasource/main/src/img/getting-started.mov
+https://user-images.githubusercontent.com/5464991/166680691-8df200d7-e354-43bf-a924-8ce9fbc8582a.mov
 
 ![image](https://raw.githubusercontent.com/sd2k/grafana-materialize-datasource/main/src/img/query.png)
 
