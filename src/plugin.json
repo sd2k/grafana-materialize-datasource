@@ -33,7 +33,20 @@
         "url": "https://github.com/sd2k/grafana-materialize-datasource/blob/main/LICENSE"
       }
     ],
-    "screenshots": [],
+    "screenshots": [
+      {
+        "name": "Getting Started",
+        "path": "./img/getting-started.png"
+      },
+      {
+        "name": "Source selector",
+        "path": "./img/query.png"
+      },
+      {
+        "name": "Suggested transforms",
+        "path": "./img/transforms.png"
+      }
+    ],
     "version": "%VERSION%",
     "updated": "%TODAY%"
   },
