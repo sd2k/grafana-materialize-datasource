@@ -13,7 +13,7 @@ bytes = "1.1.0"
 chrono = "0.4.19"
 futures-core = "0.3.21"
 futures-util = "0.3.21"
-grafana-plugin-sdk = "0.2.0"
+grafana-plugin-sdk = "0.3.0"
 http = "0.2.6"
 md5 = "0.7.0"
 rand = "0.8.5"
@@ -25,7 +25,7 @@ thiserror = "1.0.30"
 tokio = { version = "1.17.0", features = ["rt-multi-thread", "time"] }
 tokio-postgres = { version = "0.7.5", features = ["with-chrono-0_4", "with-serde_json-1"] }
 tokio-stream = "0.1.8"
-tonic = "0.6.2"
+tonic = "0.7.1"
 tracing = "0.1.31"
 
 [features]
