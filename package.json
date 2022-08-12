@@ -1,6 +1,6 @@
 {
   "name": "bsull-materialize-datasource",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Materialize datasource for Grafana",
   "scripts": {
     "build": "grafana-toolkit plugin:build",
