@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2022-08-12
+
 ### Changed
 
 - Loosened requirements on Grafana to allow the plugin to run on any version
@@ -16,5 +18,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Initial release.
 
-[unreleased]: https://github.com/sd2k/grafana-materialize-datasource/compare/v0.1.0...HEAD
+[unreleased]: https://github.com/sd2k/grafana-materialize-datasource/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/sd2k/grafana-materialize-datasource/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/sd2k/grafana-materialize-datasource/tag/v0.1.0
