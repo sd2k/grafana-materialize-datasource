@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Bump `grafana-plugin-sdk` to v0.4.0.
+
 ## [0.1.1] - 2022-08-12
 
 ### Changed

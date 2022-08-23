@@ -37,10 +37,10 @@ impl backend::DataQueryError for QueryError {
 async fn query_data_single(
     client: Client,
     uid: String,
-    query: backend::DataQuery,
+    query: backend::DataQuery<Query>,
     queries: Arc<RwLock<HashMap<path::QueryId, SelectStatement>>>,
 ) -> Result<backend::DataResponse, Error> {
-    let q: Query = serde_json::from_value(query.json).map_err(Error::InvalidQuery)?;
+    let q = query.query;
     let target = q.as_tail()?;
     let rows = target.select_all(&client).await?;
     let mut frame = rows_to_frame(&rows);
@@ -64,10 +64,11 @@ async fn query_data_single(
 
 #[backend::async_trait]
 impl backend::DataService for MaterializePlugin {
+    type Query = Query;
     type QueryError = QueryError;
     type Stream = backend::BoxDataResponseStream<Self::QueryError>;
 
-    async fn query_data(&self, request: backend::QueryDataRequest) -> Self::Stream {
+    async fn query_data(&self, request: backend::QueryDataRequest<Self::Query>) -> Self::Stream {
         let datasource_settings = request
             .plugin_context
             .datasource_instance_settings

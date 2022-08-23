@@ -35,10 +35,9 @@ impl backend::StreamService for MaterializePlugin {
 
         let initial_rows = target.select_all(&client).await?;
 
-        Ok(backend::SubscribeStreamResponse::new(
-            backend::SubscribeStreamStatus::Ok,
-            Some(frame_to_initial_data(&rows_to_frame(&initial_rows))?),
-        ))
+        Ok(backend::SubscribeStreamResponse::ok(Some(
+            frame_to_initial_data(&rows_to_frame(&initial_rows))?,
+        )))
     }
 
     type Error = Error;

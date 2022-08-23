@@ -1,5 +1,4 @@
-use grafana_plugin_sdk::backend::{self, HealthStatus};
-use serde_json::Value;
+use grafana_plugin_sdk::backend;
 
 use crate::{Error, MaterializePlugin, Result};
 
@@ -30,16 +29,10 @@ impl backend::DiagnosticsService for MaterializePlugin {
         request: backend::CheckHealthRequest,
     ) -> Result<backend::CheckHealthResponse> {
         match self.check_health(&request).await {
-            Ok(_) => Ok(backend::CheckHealthResponse::new(
-                HealthStatus::Ok,
+            Ok(_) => Ok(backend::CheckHealthResponse::ok(
                 "Connection successful".to_string(),
-                Value::Null,
             )),
-            Err(e) => Ok(backend::CheckHealthResponse::new(
-                HealthStatus::Error,
-                e.to_string(),
-                Value::Null,
-            )),
+            Err(e) => Ok(backend::CheckHealthResponse::error(e.to_string())),
         }
     }
 
