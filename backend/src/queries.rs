@@ -166,7 +166,7 @@ impl Query {
         // If this enum changes in future we'll probably want to early return
         // hence using `match` instead of `if let`.
         match self {
-            Query::Tail(target) => Ok(target),
+            Self::Tail(target) => Ok(target),
             // This could change in future; don't want a catch-all
             // pattern though as we should handle it properly.
         }

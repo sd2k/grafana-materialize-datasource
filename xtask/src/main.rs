@@ -30,7 +30,7 @@ fn go_target() -> Result<String, Box<dyn Error>> {
 
 fn watch(mut args: impl Iterator<Item = String>) -> Result<(), Box<dyn Error>> {
     let go_target = go_target()?;
-    let (build_cmd, cargo_target) = if let Some("release") = args.next().as_deref() {
+    let (build_cmd, cargo_target) = if args.next().as_deref() == Some("release") {
         ("build --release", "release")
     } else {
         ("build", "debug")

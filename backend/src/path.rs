@@ -53,7 +53,7 @@ pub struct QueryId(String);
 
 impl QueryId {
     /// Create a `QueryId` from a string containing a pre-computed hash.
-    pub fn new(s: String) -> QueryId {
+    pub const fn new(s: String) -> Self {
         Self(s)
     }
 
