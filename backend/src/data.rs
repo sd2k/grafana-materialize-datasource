@@ -43,7 +43,7 @@ async fn query_data_single(
     let q: Query = serde_json::from_value(query.json).map_err(Error::InvalidQuery)?;
     let target = q.as_tail()?;
     let rows = target.select_all(&client).await?;
-    let mut frame = rows_to_frame(rows);
+    let mut frame = rows_to_frame(&rows);
 
     if let TailTarget::Select { statement } = target {
         let query_id = QueryId::from_statement(statement);

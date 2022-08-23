@@ -6,7 +6,7 @@ use tracing::debug;
 use crate::{queries::Query, rows_to_frame, Error, MaterializePlugin, Result};
 
 /// Convert a Grafana Plugin SDK Frame to some initial data to send to new subscribers.
-fn frame_to_initial_data(frame: data::Frame) -> Result<backend::InitialData> {
+fn frame_to_initial_data(frame: &data::Frame) -> Result<backend::InitialData> {
     let checked = frame.check()?;
     Ok(backend::InitialData::from_frame(
         checked,
@@ -37,7 +37,7 @@ impl backend::StreamService for MaterializePlugin {
 
         Ok(backend::SubscribeStreamResponse::new(
             backend::SubscribeStreamStatus::Ok,
-            Some(frame_to_initial_data(rows_to_frame(initial_rows))?),
+            Some(frame_to_initial_data(&rows_to_frame(&initial_rows))?),
         ))
     }
 
@@ -64,7 +64,7 @@ impl backend::StreamService for MaterializePlugin {
                 .await?
                 .map_err(Error::Connection)
                 .and_then(|row| async {
-                    rows_to_frame(vec![row])
+                    rows_to_frame(&[row])
                         .check()
                         .map_err(Error::Data)
                         .and_then(|f| Ok(backend::StreamPacket::from_frame(f)?))

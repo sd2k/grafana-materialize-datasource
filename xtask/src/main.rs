@@ -15,7 +15,7 @@ fn print_help() {
         "Tasks:
 watch [release]      watch for changes, then compile plugin (optionally in release mode), replace in `dist` directory, and restart plugin process
 "
-    )
+    );
 }
 
 fn go_target() -> Result<String, Box<dyn Error>> {
