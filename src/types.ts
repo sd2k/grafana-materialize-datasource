@@ -70,3 +70,10 @@ export interface DataSourceOptions extends DataSourceJsonData {
   port?: number;
   username?: string;
 }
+
+/**
+ * These are secure options configured for each DataSource instance.
+ */
+export interface DataSourceSecureOptions extends DataSourceJsonData {
+  password?: string;
+}

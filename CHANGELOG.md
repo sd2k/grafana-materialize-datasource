@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add a 'password' field to the datasource settings and pass this when connecting to Materialize. This is required for Materialize Cloud.
+
 ## [0.1.1] - 2022-08-12
 
 ### Changed
