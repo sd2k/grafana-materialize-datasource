@@ -38,12 +38,18 @@ impl MaterializePlugin {
         let settings: MaterializeDatasourceSettings =
             serde_json::from_value(datasource_settings.json_data.clone())
                 .map_err(Error::InvalidDatasourceSettings)?;
-        let (client, connection) = Config::new()
+        let mut config = Config::new();
+        config
             .user(&settings.username)
             .host(&settings.host)
-            .port(settings.port)
-            .connect(NoTls)
-            .await?;
+            .port(settings.port);
+        if let Some(p) = &datasource_settings
+            .decrypted_secure_json_data
+            .get("password")
+        {
+            config.password(p);
+        }
+        let (client, connection) = config.connect(NoTls).await?;
         tokio::spawn(async move {
             if let Err(e) = connection.await {
                 eprintln!("connection error: {}", e);
