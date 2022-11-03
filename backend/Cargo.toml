@@ -11,7 +11,8 @@ authors = [
 bytes = "1.1.0"
 chrono = "0.4.19"
 futures-util = "0.3.21"
-grafana-plugin-sdk = "0.4.2"
+# grafana-plugin-sdk = "0.4.2"
+grafana-plugin-sdk = { git = "https://github.com/grafana/grafana-plugin-sdk-rust", branch = "query-data-gat" }
 http = "0.2.6"
 md5 = "0.7.0"
 rust_decimal = { version = "1.22.0", features = ["db-tokio-postgres"] }
