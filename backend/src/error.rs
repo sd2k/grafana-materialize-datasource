@@ -19,7 +19,7 @@ pub enum Error {
     UnknownPath(String),
 
     #[error("invalid datasource settings: {0}")]
-    InvalidDatasourceSettings(serde_json::Error),
+    InvalidDatasourceSettings(#[from] serde_json::Error),
 
     #[error("Datasource not present on request")]
     MissingDatasource,

@@ -22,6 +22,9 @@ pub enum ResourceError {
 
     #[error("Missing datasource settings")]
     MissingDatasourceSettings,
+
+    #[error("Invalid datasource settings")]
+    InvalidDatasourceSettings(#[from] serde_json::Error),
 }
 
 #[derive(Debug, Serialize)]
@@ -34,7 +37,9 @@ impl backend::ErrIntoHttpResponse for ResourceError {
         let status = match self {
             Self::NotFound => StatusCode::NOT_FOUND,
             Self::Plugin(_) => StatusCode::INTERNAL_SERVER_ERROR,
-            Self::MissingDatasourceSettings => StatusCode::BAD_REQUEST,
+            Self::MissingDatasourceSettings | Self::InvalidDatasourceSettings(_) => {
+                StatusCode::BAD_REQUEST
+            }
         };
         Ok(Response::builder().status(status).body(Bytes::from(
             serde_json::to_vec(&JsonError {
