@@ -108,11 +108,7 @@ impl TailTarget {
     /// as part of their stream subscription (i.e. in `subscribe_stream`).
     pub async fn select_all(&self, client: &Client) -> Result<Vec<Row>> {
         Ok(match self {
-            Self::Relation { name } => {
-                client
-                    .query(&format!("SELECT * FROM {}", name), &[])
-                    .await?
-            }
+            Self::Relation { name } => client.query(&format!("SELECT * FROM {name}"), &[]).await?,
             Self::Select { statement } => client.query(&statement.0, &[]).await?,
         })
     }
