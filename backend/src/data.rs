@@ -53,7 +53,7 @@ async fn query_data_single(
     let path = q.to_path();
     // Set the channel of the frame, indicating to Grafana that it should switch to
     // streaming.
-    let channel = format!("ds/{}/{}", uid, path)
+    let channel = format!("ds/{uid}/{path}")
         .parse()
         .map_err(Error::CreatingChannel)?;
     frame.set_channel(channel);

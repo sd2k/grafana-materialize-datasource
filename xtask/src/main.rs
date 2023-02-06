@@ -36,9 +36,7 @@ fn watch(mut args: impl Iterator<Item = String>) -> Result<(), Box<dyn Error>> {
         ("build", "debug")
     };
     let shell_cmd = format!(
-        "rm -rf ./dist/gpx_grafana-materialize-datasource_{0} && cp ./target/{1}/grafana-materialize-datasource ./dist/gpx_grafana-materialize-datasource_{0} && pkill -HUP gpx_grafana-materialize-datasource_{0}",
-        go_target,
-        cargo_target,
+        "rm -rf ./dist/gpx_grafana-materialize-datasource_{go_target} && cp ./target/{cargo_target}/grafana-materialize-datasource ./dist/gpx_grafana-materialize-datasource_{go_target} && pkill -HUP gpx_grafana-materialize-datasource_{go_target}",
     );
     let mut handle = Command::new("cargo")
         .arg("watch")
